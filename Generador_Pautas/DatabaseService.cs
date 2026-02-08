@@ -1165,27 +1165,19 @@ namespace Generador_Pautas
         }
 
         /// <summary>
-        /// Detecta el tipo de tanda basándose en el nombre de la radio.
-        /// KARIBEÑA y LA KALLE usan 4 tandas por hora (00, 20, 30, 50).
-        /// Las demás radios usan 2 tandas por hora (00, 30).
+        /// Detecta el tipo de tanda basandose en el nombre de la radio.
         /// </summary>
         private TipoTanda DetectarTipoProgramacionPorRadio(string radio)
         {
-            if (string.IsNullOrEmpty(radio))
-                return TipoTanda.Tandas_00_30;
+            if (string.IsNullOrEmpty(radio)) return TipoTanda.Tandas_00_30;
 
             string radioUpper = radio.ToUpper();
-
-            // KARIBEÑA y LA KALLE usan las 4 tandas: 00, 20, 30, 50
-            // Incluir variantes de codificación: KARIBEÑA, KARIBENA, KARIBEÃA (UTF-8 mal interpretado)
             if (radioUpper.Contains("KARIBEÑA") || radioUpper.Contains("KARIBENA") ||
                 radioUpper.Contains("KARIBEÃ") || radioUpper.Contains("KARIBE") ||
                 radioUpper.Contains("LAKALLE") || radioUpper.Contains("LA KALLE") || radioUpper.Contains("KALLE"))
             {
                 return TipoTanda.Tandas_00_20_30_50;
             }
-
-            // EXITOSA y otros usan 00-30 por defecto
             return TipoTanda.Tandas_00_30;
         }
 

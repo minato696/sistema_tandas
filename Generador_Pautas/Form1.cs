@@ -26,6 +26,7 @@ namespace Generador_Pautas
         private bool isDragging = false;
         private DGV_Form1 dgvForm;
         private DatabaseManager dbManager = new DatabaseManager(); // Crea una instancia de DatabaseManager
+        private DashboardControl _dashboardControl; // Dashboard real
         public BassPlayer BassPlayer { get; private set; }
         private AudioPlayer audioPlayer = new AudioPlayer();
         public List<AgregarComercialesData> agregarComercialesDataList = new List<AgregarComercialesData>();
@@ -102,6 +103,12 @@ namespace Generador_Pautas
             this.UpdateStyles();
 
             InitializeComponent();
+
+            // Inicializar el DashboardControl real y agregarlo al panel
+            _dashboardControl = new DashboardControl();
+            _dashboardControl.Dock = DockStyle.Fill;
+            dashboardControl1.Controls.Add(_dashboardControl);
+
             elegantProgressBar1.MouseDown += ProgressBar1_MouseDown;
             elegantProgressBar1.MouseUp += ProgressBar1_MouseUp;
             elegantProgressBar1.MouseMove += ProgressBar1_MouseMove;
@@ -2100,7 +2107,7 @@ namespace Generador_Pautas
         {
             await dbManager.LoadDataFromDatabaseAsync(dgv_base, connectionString, tableName);
             // Refrescar el dashboard despues de cargar datos
-            dashboardControl1?.RefrescarDashboard();
+            _dashboardControl?.RefrescarDashboard();
         }
 
         private async Task CargarDatosFiltradosAsync(string estadoFiltro)
@@ -2163,8 +2170,8 @@ namespace Generador_Pautas
             {
                 double percentage = e.X / (double)elegantProgressBar1.Width;
                 int newValue = (int)(percentage * (elegantProgressBar1.Maximum - elegantProgressBar1.Minimum));
-                newValue = Math.Max((int)elegantProgressBar1.Minimum, Math.Min((int)elegantProgressBar1.Maximum, newValue));
-                elegantProgressBar1.Value = (uint)newValue;
+                newValue = Math.Max(elegantProgressBar1.Minimum, Math.Min(elegantProgressBar1.Maximum, newValue));
+                elegantProgressBar1.Value = newValue;
                 UpdateAudioPosition(percentage);
             }
         }
@@ -2185,7 +2192,7 @@ namespace Generador_Pautas
         }
         private void AudioPlayer_AudioProgressUpdated(object sender, double progressPercentage)
         {
-            elegantProgressBar1.Value = (uint)progressPercentage;
+            elegantProgressBar1.Value = (int)progressPercentage;
             // Actualizar el tiempo transcurrido
             UpdatePlayingRow(playingRow => {
                 double totalLengthSeconds = Bass.BASS_ChannelBytes2Seconds(audioPlayer.CurrentStream, Bass.BASS_ChannelGetLength(audioPlayer.CurrentStream));
@@ -2205,13 +2212,13 @@ namespace Generador_Pautas
                 // Calcular el progreso actual
                 double totalLengthSeconds = audioPlayer.GetTotalLengthSeconds();
                 double progressPercentage = (positionSeconds / totalLengthSeconds) * 100;
-                elegantProgressBar1.Value = (uint)progressPercentage;
+                elegantProgressBar1.Value = (int)progressPercentage;
                 // Actualizar el DataGridView
                 UpdatePlayingRow(playingRow => playingRow.Cells["Column4"].Value = position.ToString(SongTimeFormat));
                 // Actualiza los niveles de audio
                 (uint leftLevel, uint rightLevel) = audioPlayer.UpdateAudioLevels();
-                progressBarLeft.Value = leftLevel;
-                progressBarRight.Value = rightLevel;
+                progressBarLeft.Value = (int)leftLevel;
+                progressBarRight.Value = (int)rightLevel;
             }
         }
         private void UpdateAudioPosition(double percentage)
@@ -2352,7 +2359,7 @@ namespace Generador_Pautas
                 await CargarDBAsync();
 
                 // Refrescar el dashboard
-                dashboardControl1?.RefrescarDashboard();
+                _dashboardControl?.RefrescarDashboard();
 
                 // Aplicar filtros si hay alguno activo
                 if (!string.IsNullOrEmpty(_filtroCiudadActual) || !string.IsNullOrEmpty(_filtroRadioActual))
@@ -2979,7 +2986,7 @@ namespace Generador_Pautas
                 await CargarDBAsync();
 
                 // Refrescar dashboard
-                dashboardControl1?.RefrescarDashboard();
+                _dashboardControl?.RefrescarDashboard();
 
                 // Aplicar filtros si hay alguno activo
                 if (!string.IsNullOrEmpty(_filtroCiudadActual) || !string.IsNullOrEmpty(_filtroRadioActual))

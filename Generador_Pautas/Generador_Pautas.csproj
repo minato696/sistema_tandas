@@ -116,12 +116,6 @@
     <Compile Include="DatabaseManager.cs" />
     <Compile Include="DatabaseService.cs" />
     <Compile Include="dgv_form1.cs" />
-    <Compile Include="ElegantProgressBar.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="ElegantProgressBar.Designer.cs">
-      <DependentUpon>ElegantProgressBar.cs</DependentUpon>
-    </Compile>
     <Compile Include="FileExplorerPanel.cs" />
     <Compile Include="PauteoRapidoPanel.cs" />
     <Compile Include="Form1.cs">
@@ -179,9 +173,6 @@
     </Compile>
     <EmbeddedResource Include="DashboardControl.resx">
       <DependentUpon>DashboardControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ElegantProgressBar.resx">
-      <DependentUpon>ElegantProgressBar.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>

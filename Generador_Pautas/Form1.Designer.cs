@@ -48,9 +48,9 @@ namespace Generador_Pautas
             this.btn_pause = new System.Windows.Forms.Button();
             this.btn_stop = new System.Windows.Forms.Button();
             this.btn_play = new System.Windows.Forms.Button();
-            this.elegantProgressBar1 = new Generador_Pautas.ElegantProgressBar();
-            this.progressBarRight = new Generador_Pautas.ElegantProgressBar();
-            this.progressBarLeft = new Generador_Pautas.ElegantProgressBar();
+            this.elegantProgressBar1 = new System.Windows.Forms.ProgressBar();
+            this.progressBarRight = new System.Windows.Forms.ProgressBar();
+            this.progressBarLeft = new System.Windows.Forms.ProgressBar();
             this.pnlRight = new System.Windows.Forms.Panel();
             this.pnlTopRight = new System.Windows.Forms.Panel();
             this.dgv_base = new System.Windows.Forms.DataGridView();
@@ -71,7 +71,7 @@ namespace Generador_Pautas
             this.cboFiltroEstado = new System.Windows.Forms.ComboBox();
             this.lblFiltroEstado = new System.Windows.Forms.Label();
             this.pnlToolbar = new System.Windows.Forms.Panel();
-            this.dashboardControl1 = new Generador_Pautas.DashboardControl();
+            this.dashboardControl1 = new System.Windows.Forms.Panel();
             this.pnlBottomRight = new System.Windows.Forms.Panel();
             this.dgv_pautas = new System.Windows.Forms.DataGridView();
             this.grpEliminarPautas = new System.Windows.Forms.GroupBox();
@@ -284,57 +284,42 @@ namespace Generador_Pautas
             this.btn_play.Text = "PLAY";
             this.btn_play.UseVisualStyleBackColor = false;
             this.btn_play.Click += new System.EventHandler(this.btn_play_Click);
-            // 
+            //
             // elegantProgressBar1
-            // 
-            this.elegantProgressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            this.elegantProgressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.elegantProgressBar1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(210)))), ((int)(((byte)(220)))));
-            this.elegantProgressBar1.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(210)))), ((int)(((byte)(220)))));
-            this.elegantProgressBar1.IsAudioLevel = false;
             this.elegantProgressBar1.Location = new System.Drawing.Point(8, 48);
-            this.elegantProgressBar1.Maximum = ((uint)(100u));
-            this.elegantProgressBar1.Minimum = ((uint)(0u));
+            this.elegantProgressBar1.Maximum = 100;
+            this.elegantProgressBar1.Minimum = 0;
             this.elegantProgressBar1.Name = "elegantProgressBar1";
-            this.elegantProgressBar1.ProgressColorEnd = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(120)))), ((int)(((byte)(215)))));
-            this.elegantProgressBar1.ProgressColorStart = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(120)))), ((int)(((byte)(215)))));
             this.elegantProgressBar1.Size = new System.Drawing.Size(298, 20);
             this.elegantProgressBar1.TabIndex = 2;
-            this.elegantProgressBar1.Value = ((uint)(0u));
-            // 
+            this.elegantProgressBar1.Value = 0;
+            //
             // progressBarRight
-            // 
-            this.progressBarRight.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            this.progressBarRight.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBarRight.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(210)))), ((int)(((byte)(220)))));
-            this.progressBarRight.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(210)))), ((int)(((byte)(220)))));
-            this.progressBarRight.IsAudioLevel = true;
             this.progressBarRight.Location = new System.Drawing.Point(8, 28);
-            this.progressBarRight.Maximum = ((uint)(100u));
-            this.progressBarRight.Minimum = ((uint)(0u));
+            this.progressBarRight.Maximum = 100;
+            this.progressBarRight.Minimum = 0;
             this.progressBarRight.Name = "progressBarRight";
-            this.progressBarRight.ProgressColorEnd = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(200)))), ((int)(((byte)(83)))));
-            this.progressBarRight.ProgressColorStart = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(200)))), ((int)(((byte)(83)))));
             this.progressBarRight.Size = new System.Drawing.Size(298, 12);
             this.progressBarRight.TabIndex = 1;
-            this.progressBarRight.Value = ((uint)(0u));
-            // 
+            this.progressBarRight.Value = 0;
+            //
             // progressBarLeft
-            // 
-            this.progressBarLeft.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            this.progressBarLeft.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBarLeft.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(210)))), ((int)(((byte)(220)))));
-            this.progressBarLeft.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(210)))), ((int)(((byte)(220)))));
-            this.progressBarLeft.IsAudioLevel = true;
             this.progressBarLeft.Location = new System.Drawing.Point(8, 12);
-            this.progressBarLeft.Maximum = ((uint)(100u));
-            this.progressBarLeft.Minimum = ((uint)(0u));
+            this.progressBarLeft.Maximum = 100;
+            this.progressBarLeft.Minimum = 0;
             this.progressBarLeft.Name = "progressBarLeft";
-            this.progressBarLeft.ProgressColorEnd = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(200)))), ((int)(((byte)(83)))));
-            this.progressBarLeft.ProgressColorStart = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(200)))), ((int)(((byte)(83)))));
             this.progressBarLeft.Size = new System.Drawing.Size(298, 12);
             this.progressBarLeft.TabIndex = 0;
-            this.progressBarLeft.Value = ((uint)(0u));
+            this.progressBarLeft.Value = 0;
             // 
             // pnlRight
             // 
@@ -564,14 +549,12 @@ namespace Generador_Pautas
             this.pnlToolbar.Padding = new System.Windows.Forms.Padding(8);
             this.pnlToolbar.Size = new System.Drawing.Size(1054, 50);
             this.pnlToolbar.TabIndex = 0;
-            // 
+            //
             // dashboardControl1
-            // 
+            //
             this.dashboardControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.dashboardControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(245)))));
-            this.dashboardControl1.Cursor = System.Windows.Forms.Cursors.Default;
             this.dashboardControl1.Location = new System.Drawing.Point(762, 0);
-            this.dashboardControl1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
             this.dashboardControl1.Name = "dashboardControl1";
             this.dashboardControl1.Size = new System.Drawing.Size(280, 51);
             this.dashboardControl1.TabIndex = 4;
@@ -960,9 +943,9 @@ namespace Generador_Pautas
 
 
         // Progress Bars
-        private ElegantProgressBar elegantProgressBar1;
-        private ElegantProgressBar progressBarLeft;
-        private ElegantProgressBar progressBarRight;
+        private System.Windows.Forms.ProgressBar elegantProgressBar1;
+        private System.Windows.Forms.ProgressBar progressBarLeft;
+        private System.Windows.Forms.ProgressBar progressBarRight;
 
         // Pautas del comercial seleccionado
         private System.Windows.Forms.DataGridView dgv_pautas;
@@ -993,6 +976,6 @@ namespace Generador_Pautas
         private System.Windows.Forms.DataGridViewTextBoxColumn Column3;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column4;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column5;
-        private DashboardControl dashboardControl1;
+        private System.Windows.Forms.Panel dashboardControl1;
     }
 }

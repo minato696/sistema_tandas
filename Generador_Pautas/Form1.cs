@@ -1804,6 +1804,7 @@ namespace Generador_Pautas
 
         /// <summary>
         /// Obtiene los datos de un comercial desde la BD basandose en FilePath, Ciudad, Radio y codigo numerico
+        /// Busca primero en Comerciales (tabla principal) y si no encuentra, busca en ComercialesAsignados
         /// </summary>
         private async Task<AgregarComercialesData> ObtenerDatosComercialAsync(string filePath, string ciudad, string radio, string codigoNumerico = null)
         {
@@ -1813,68 +1814,120 @@ namespace Generador_Pautas
                 {
                     await conn.OpenAsync();
 
-                    // Construir la query base
-                    string query;
-
+                    // Primero buscar en la tabla Comerciales (comerciales con codigo ACC-)
                     if (!string.IsNullOrEmpty(codigoNumerico))
                     {
-                        // Si tenemos codigo numerico, buscar por codigo numerico + ciudad + radio
-                        // El codigo numerico es el segundo segmento del codigo completo (ej: ACC-623-AND-EXI-0000 -> 623)
-                        query = @"SELECT Codigo, FilePath, FechaInicio, FechaFinal, Ciudad, Radio, Posicion, Estado, TipoProgramacion
+                        string queryComerciales = @"SELECT Codigo, FilePath, FechaInicio, FechaFinal, Ciudad, Radio, Posicion, Estado, TipoProgramacion
                                 FROM Comerciales
                                 WHERE split_part(Codigo, '-', 2) = @CodigoNumerico
                                   AND Ciudad = @Ciudad
                                   AND Radio = @Radio
                                 ORDER BY Codigo
                                 LIMIT 1";
-                    }
-                    else
-                    {
-                        // Fallback: buscar por FilePath, Ciudad y Radio (comportamiento anterior)
-                        query = @"SELECT Codigo, FilePath, FechaInicio, FechaFinal, Ciudad, Radio, Posicion, Estado, TipoProgramacion
-                                FROM Comerciales
-                                WHERE FilePath = @FilePath AND Ciudad = @Ciudad AND Radio = @Radio
-                                ORDER BY Codigo
-                                LIMIT 1";
-                    }
 
-                    using (var cmd = new Npgsql.NpgsqlCommand(query, conn))
-                    {
-                        if (!string.IsNullOrEmpty(codigoNumerico))
+                        using (var cmd = new Npgsql.NpgsqlCommand(queryComerciales, conn))
                         {
                             cmd.Parameters.AddWithValue("@CodigoNumerico", codigoNumerico);
+                            cmd.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
+                            cmd.Parameters.AddWithValue("@Radio", radio ?? "");
+
+                            using (var reader = await cmd.ExecuteReaderAsync())
+                            {
+                                if (await reader.ReadAsync())
+                                {
+                                    return new AgregarComercialesData
+                                    {
+                                        Codigo = reader["Codigo"].ToString(),
+                                        FilePath = reader["FilePath"].ToString(),
+                                        FechaInicio = Convert.ToDateTime(reader["FechaInicio"]),
+                                        FechaFinal = Convert.ToDateTime(reader["FechaFinal"]),
+                                        Ciudad = reader["Ciudad"].ToString(),
+                                        Radio = reader["Radio"].ToString(),
+                                        Posicion = reader["Posicion"].ToString(),
+                                        Estado = reader["Estado"].ToString(),
+                                        TipoProgramacion = reader["TipoProgramacion"]?.ToString() ?? "Cada 00-30 (48 tandas)"
+                                    };
+                                }
+                            }
+                        }
+                    }
+
+                    // Si no encontramos en Comerciales, buscar en ComercialesAsignados (comerciales importados)
+                    // Estos comerciales usan el Codigo directamente como identificador
+                    if (!string.IsNullOrEmpty(codigoNumerico) || !string.IsNullOrEmpty(filePath))
+                    {
+                        string queryAsignados;
+                        if (!string.IsNullOrEmpty(codigoNumerico))
+                        {
+                            // Buscar por codigo en ComercialesAsignados
+                            queryAsignados = @"SELECT DISTINCT Codigo, Comercial as FilePath,
+                                    MIN(Fecha) as FechaInicio, MAX(Fecha) as FechaFinal,
+                                    Ciudad, Radio,
+                                    COALESCE(MAX(Posicion)::text, '1') as Posicion,
+                                    'Activo' as Estado,
+                                    TipoProgramacion
+                                FROM ComercialesAsignados
+                                WHERE Codigo = @CodigoNumerico
+                                  AND Ciudad = @Ciudad
+                                  AND Radio = @Radio
+                                GROUP BY Codigo, Comercial, Ciudad, Radio, TipoProgramacion
+                                LIMIT 1";
                         }
                         else
                         {
-                            cmd.Parameters.AddWithValue("@FilePath", filePath);
+                            // Buscar por FilePath en ComercialesAsignados
+                            queryAsignados = @"SELECT DISTINCT Codigo, Comercial as FilePath,
+                                    MIN(Fecha) as FechaInicio, MAX(Fecha) as FechaFinal,
+                                    Ciudad, Radio,
+                                    COALESCE(MAX(Posicion)::text, '1') as Posicion,
+                                    'Activo' as Estado,
+                                    TipoProgramacion
+                                FROM ComercialesAsignados
+                                WHERE LOWER(Comercial) = LOWER(@FilePath)
+                                  AND Ciudad = @Ciudad
+                                  AND Radio = @Radio
+                                GROUP BY Codigo, Comercial, Ciudad, Radio, TipoProgramacion
+                                LIMIT 1";
                         }
-                        cmd.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
-                        cmd.Parameters.AddWithValue("@Radio", radio ?? "");
 
-                        using (var reader = await cmd.ExecuteReaderAsync())
+                        using (var cmd = new Npgsql.NpgsqlCommand(queryAsignados, conn))
                         {
-                            if (await reader.ReadAsync())
+                            if (!string.IsNullOrEmpty(codigoNumerico))
                             {
-                                return new AgregarComercialesData
+                                cmd.Parameters.AddWithValue("@CodigoNumerico", codigoNumerico);
+                            }
+                            else
+                            {
+                                cmd.Parameters.AddWithValue("@FilePath", filePath);
+                            }
+                            cmd.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
+                            cmd.Parameters.AddWithValue("@Radio", radio ?? "");
+
+                            using (var reader = await cmd.ExecuteReaderAsync())
+                            {
+                                if (await reader.ReadAsync())
                                 {
-                                    Codigo = reader["Codigo"].ToString(),
-                                    FilePath = reader["FilePath"].ToString(),
-                                    FechaInicio = Convert.ToDateTime(reader["FechaInicio"]),
-                                    FechaFinal = Convert.ToDateTime(reader["FechaFinal"]),
-                                    Ciudad = reader["Ciudad"].ToString(),
-                                    Radio = reader["Radio"].ToString(),
-                                    Posicion = reader["Posicion"].ToString(),
-                                    Estado = reader["Estado"].ToString(),
-                                    TipoProgramacion = reader["TipoProgramacion"]?.ToString() ?? "Cada 00-30 (48 tandas)"
-                                };
+                                    return new AgregarComercialesData
+                                    {
+                                        Codigo = reader["Codigo"].ToString(),
+                                        FilePath = reader["FilePath"].ToString(),
+                                        FechaInicio = Convert.ToDateTime(reader["FechaInicio"]),
+                                        FechaFinal = Convert.ToDateTime(reader["FechaFinal"]),
+                                        Ciudad = reader["Ciudad"].ToString(),
+                                        Radio = reader["Radio"].ToString(),
+                                        Posicion = reader["Posicion"].ToString(),
+                                        Estado = reader["Estado"].ToString(),
+                                        TipoProgramacion = reader["TipoProgramacion"]?.ToString() ?? "Cada 00-30 (48 tandas)"
+                                    };
+                                }
                             }
                         }
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Error al obtener datos del comercial
+                System.Diagnostics.Debug.WriteLine($"Error al obtener datos del comercial: {ex.Message}");
             }
 
             return null;

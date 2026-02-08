@@ -99,8 +99,6 @@
     <Compile Include="CacheService.cs" />
     <Compile Include="DbConnectionHelper.cs" />
     <Compile Include="ConfigManager.cs" />
-    <Compile Include="SQLiteDataAccess.cs" />
-    <Compile Include="SQLiteDatabaseService.cs" />
     <Compile Include="SQLiteMigration.cs" />
     <Compile Include="DashboardControl.cs">
       <SubType>UserControl</SubType>
@@ -118,7 +116,6 @@
     <Compile Include="DataAccess.cs" />
     <Compile Include="DatabaseManager.cs" />
     <Compile Include="DatabaseService.cs" />
-    <Compile Include="DataHandler.cs" />
     <Compile Include="dgv_form1.cs" />
     <Compile Include="ElegantProgressBar.cs">
       <SubType>UserControl</SubType>

@@ -1853,25 +1853,30 @@ namespace Generador_Pautas
                     }
 
                     // Si no encontramos en Comerciales, buscar en ComercialesAsignados (comerciales importados)
-                    // Buscar primero por FilePath (más confiable) ya que el código puede tener diferentes formatos
+                    // Buscar por nombre de archivo (ComercialAsignado puede contener ruta completa o solo nombre)
                     if (!string.IsNullOrEmpty(filePath))
                     {
-                        string queryAsignados = @"SELECT DISTINCT Codigo, Comercial as FilePath,
+                        string nombreArchivo = System.IO.Path.GetFileName(filePath);
+
+                        // Buscar por ruta completa O por nombre de archivo
+                        string queryAsignados = @"SELECT DISTINCT Codigo, ComercialAsignado as FilePath,
                                 MIN(Fecha) as FechaInicio, MAX(Fecha) as FechaFinal,
                                 Ciudad, Radio,
                                 COALESCE(MAX(Posicion)::text, '1') as Posicion,
                                 'Activo' as Estado,
                                 TipoProgramacion
                             FROM ComercialesAsignados
-                            WHERE LOWER(Comercial) = LOWER(@FilePath)
+                            WHERE (LOWER(ComercialAsignado) = LOWER(@FilePath)
+                                   OR LOWER(ComercialAsignado) LIKE '%' || LOWER(@NombreArchivo))
                               AND Ciudad = @Ciudad
                               AND Radio = @Radio
-                            GROUP BY Codigo, Comercial, Ciudad, Radio, TipoProgramacion
+                            GROUP BY Codigo, ComercialAsignado, Ciudad, Radio, TipoProgramacion
                             LIMIT 1";
 
                         using (var cmd = new Npgsql.NpgsqlCommand(queryAsignados, conn))
                         {
                             cmd.Parameters.AddWithValue("@FilePath", filePath);
+                            cmd.Parameters.AddWithValue("@NombreArchivo", nombreArchivo);
                             cmd.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
                             cmd.Parameters.AddWithValue("@Radio", radio ?? "");
 

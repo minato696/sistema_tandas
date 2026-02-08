@@ -697,7 +697,7 @@ namespace Generador_Pautas
 
         /// <summary>
         /// Establece un nuevo audio manteniendo la configuración actual (fechas, días, tandas)
-        /// Solo cambia el audio y avanza la posición automáticamente
+        /// La posición NO se avanza aquí - solo se avanza después de generar la pauta
         /// </summary>
         public void SetAudioManteniendo(string audioPath)
         {
@@ -706,9 +706,7 @@ namespace Generador_Pautas
             btnGenerarRapido.Enabled = true;
             lblEstado.Text = "Listo para generar";
             lblEstado.ForeColor = Color.FromArgb(76, 175, 80);
-
-            // Avanzar posición automáticamente
-            AvanzarPosicion();
+            // La posición se mantiene - solo avanza después de generar
         }
 
         /// <summary>
@@ -958,9 +956,12 @@ namespace Generador_Pautas
                 }
                 else
                 {
+                    // Mantener configuración (fechas, días, tandas) y solo limpiar audio y avanzar posición
                     _audioPathActual = null;
                     txtAudioPath.Text = "";
-                    lblEstado.Text = "Seleccione el siguiente audio";
+                    AvanzarPosicion();
+                    lblEstado.Text = "Configuración mantenida. Seleccione siguiente audio";
+                    btnGenerarRapido.Enabled = false;
                 }
             }
             catch (Exception ex)

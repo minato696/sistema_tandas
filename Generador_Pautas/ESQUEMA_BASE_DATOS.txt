@@ -1,0 +1,308 @@
+================================================================================
+                    ESQUEMA DE BASE DE DATOS - GENERADOR DE PAUTAS
+                              SQLite Database Schema
+================================================================================
+
+Base de datos: Data.db (local) o \\servidor\compartido\Data.db (red)
+
+================================================================================
+                                    TABLAS
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              COMERCIALES                                     │
+│                     (Tabla principal de spots/comerciales)                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Campo          │ Tipo    │ Restriccion      │ Descripcion                   │
+├────────────────┼─────────┼──────────────────┼───────────────────────────────┤
+│ Codigo         │ TEXT    │ PRIMARY KEY      │ Codigo unico del comercial    │
+│                │         │                  │ Ej: "001", "002"              │
+│ FilePath       │ TEXT    │ NOT NULL         │ Ruta del archivo de audio     │
+│                │         │                  │ Ej: "C:\Audio\spot1.mp3"      │
+│ FechaInicio    │ TEXT    │ NOT NULL         │ Fecha inicio vigencia         │
+│                │         │                  │ Formato: "yyyy-MM-dd"         │
+│ FechaFinal     │ TEXT    │ NOT NULL         │ Fecha fin vigencia            │
+│                │         │                  │ Formato: "yyyy-MM-dd"         │
+│ Ciudad         │ TEXT    │ NOT NULL         │ Ciudad donde se emite         │
+│                │         │                  │ Ej: "LIMA", "TRUJILLO"        │
+│ Radio          │ TEXT    │ NOT NULL         │ Emisora de radio              │
+│                │         │                  │ Ej: "EXITOSA", "KARIBEÑA"     │
+│ Posicion       │ TEXT    │ NOT NULL         │ Prioridad en la tanda         │
+│                │         │                  │ Ej: "P01", "P02", "P03"       │
+│ Estado         │ TEXT    │ DEFAULT 'Activo' │ Estado del comercial          │
+│                │         │                  │ Valores: "Activo", "Inactivo" │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         COMERCIALES_ASIGNADOS                                │
+│              (Asignacion de comerciales a celdas hora/dia)                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Campo             │ Tipo    │ Restriccion      │ Descripcion                │
+├───────────────────┼─────────┼──────────────────┼────────────────────────────┤
+│ Id                │ INTEGER │ PRIMARY KEY      │ ID autoincremental         │
+│                   │         │ AUTOINCREMENT    │                            │
+│ Fila              │ INTEGER │ NOT NULL         │ Indice de fila (hora)      │
+│                   │         │                  │ Ej: 0=06:00, 1=06:30...    │
+│ Columna           │ INTEGER │ NOT NULL         │ Indice de columna (dia)    │
+│                   │         │                  │ Ej: 2=Lunes, 3=Martes...   │
+│ ComercialAsignado │ TEXT    │ NOT NULL         │ Nombre del comercial       │
+│                   │         │                  │ Ej: "P01 Spot Coca Cola"   │
+│ Codigo            │ TEXT    │ FOREIGN KEY      │ Referencia a Comerciales   │
+│                   │         │ ON DELETE CASCADE│ (se elimina en cascada)    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                               USUARIOS                                       │
+│                    (Usuarios del sistema con roles)                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Campo          │ Tipo    │ Restriccion      │ Descripcion                   │
+├────────────────┼─────────┼──────────────────┼───────────────────────────────┤
+│ Id             │ INTEGER │ PRIMARY KEY      │ ID autoincremental            │
+│                │         │ AUTOINCREMENT    │                               │
+│ Usuario        │ TEXT    │ NOT NULL, UNIQUE │ Nombre de usuario (login)     │
+│                │         │                  │ Ej: "admin", "usuario"        │
+│ Contrasena     │ TEXT    │ NOT NULL         │ Hash SHA256 de contrasena     │
+│ Rol            │ TEXT    │ DEFAULT 'Usuario'│ Rol del usuario               │
+│                │         │                  │ "Administrador" o "Usuario"   │
+│ NombreCompleto │ TEXT    │                  │ Nombre completo               │
+│                │         │                  │ Ej: "Juan Perez"              │
+│ Estado         │ TEXT    │ DEFAULT 'Activo' │ Estado de la cuenta           │
+│                │         │                  │ "Activo" o "Inactivo"         │
+│ FechaCreacion  │ TEXT    │ NOT NULL         │ Fecha de creacion             │
+│                │         │                  │ Formato: "yyyy-MM-dd HH:mm:ss"│
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                               CIUDADES                                       │
+│                      (Ciudades donde se emiten spots)                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Campo          │ Tipo    │ Restriccion      │ Descripcion                   │
+├────────────────┼─────────┼──────────────────┼───────────────────────────────┤
+│ Id             │ INTEGER │ PRIMARY KEY      │ ID autoincremental            │
+│                │         │ AUTOINCREMENT    │                               │
+│ Nombre         │ TEXT    │ NOT NULL, UNIQUE │ Nombre de la ciudad           │
+│                │         │                  │ Ej: "LIMA", "TRUJILLO"        │
+│ Estado         │ TEXT    │ DEFAULT 'Activo' │ Estado de la ciudad           │
+│                │         │                  │ "Activo" o "Inactivo"         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          TANDAS_PROGRAMACION                                 │
+│                  (Configuracion de horarios de tandas)                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Campo          │ Tipo    │ Restriccion      │ Descripcion                   │
+├────────────────┼─────────┼──────────────────┼───────────────────────────────┤
+│ Id             │ INTEGER │ PRIMARY KEY      │ ID autoincremental            │
+│                │         │ AUTOINCREMENT    │                               │
+│ Nombre         │ TEXT    │ NOT NULL, UNIQUE │ Nombre de la tanda            │
+│                │         │                  │ Ej: "Tandas Manana"           │
+│ Horarios       │ TEXT    │ NOT NULL         │ Lista de horarios separados   │
+│                │         │                  │ por coma                      │
+│                │         │                  │ Ej: "06:00,06:30,07:00,07:30" │
+│ Estado         │ TEXT    │ DEFAULT 'Activo' │ Estado de la tanda            │
+│                │         │                  │ "Activo" o "Inactivo"         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                RADIOS                                        │
+│                   (Estaciones de radio disponibles)                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Campo          │ Tipo    │ Restriccion      │ Descripcion                   │
+├────────────────┼─────────┼──────────────────┼───────────────────────────────┤
+│ Id             │ INTEGER │ PRIMARY KEY      │ ID autoincremental            │
+│                │         │ AUTOINCREMENT    │                               │
+│ Nombre         │ TEXT    │ NOT NULL, UNIQUE │ Nombre de la radio            │
+│                │         │                  │ Ej: "EXITOSA", "KARIBEÑA"     │
+│ Descripcion    │ TEXT    │                  │ Descripcion opcional          │
+│                │         │                  │ Ej: "Radio Exitosa 95.5 FM"   │
+│ Estado         │ TEXT    │ DEFAULT 'Activo' │ Estado de la radio            │
+│                │         │                  │ "Activo" o "Inactivo"         │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            RADIOS_CIUDADES                                   │
+│            (Relacion N:N entre Radios y Ciudades)                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Campo          │ Tipo    │ Restriccion      │ Descripcion                   │
+├────────────────┼─────────┼──────────────────┼───────────────────────────────┤
+│ Id             │ INTEGER │ PRIMARY KEY      │ ID autoincremental            │
+│                │         │ AUTOINCREMENT    │                               │
+│ RadioId        │ INTEGER │ NOT NULL, FK     │ Referencia a Radios.Id        │
+│                │         │ ON DELETE CASCADE│                               │
+│ CiudadId       │ INTEGER │ NOT NULL, FK     │ Referencia a Ciudades.Id      │
+│                │         │ ON DELETE CASCADE│                               │
+│ Estado         │ TEXT    │ DEFAULT 'Activo' │ Estado de la asignacion       │
+│                │         │                  │ "Activo" o "Inactivo"         │
+├────────────────┼─────────┼──────────────────┼───────────────────────────────┤
+│ UNIQUE(RadioId, CiudadId) - Evita duplicados de combinacion radio-ciudad   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                              RELACIONES
+================================================================================
+
+                    ┌──────────────────┐
+                    │    COMERCIALES   │
+                    │   (Tabla padre)  │
+                    └────────┬─────────┘
+                             │
+                             │ 1:N (Un comercial puede estar
+                             │      en muchas celdas hora/dia)
+                             │
+                             ▼
+                    ┌──────────────────┐
+                    │  COMERCIALES     │
+                    │  ASIGNADOS       │
+                    │ (Tabla hija)     │
+                    └──────────────────┘
+
+    * ON DELETE CASCADE: Si se elimina un comercial,
+      se eliminan todas sus asignaciones automaticamente.
+
+
+    ┌──────────────────┐           ┌──────────────────┐
+    │     RADIOS       │           │    CIUDADES      │
+    │  (Estaciones)    │           │   (Ubicaciones)  │
+    └────────┬─────────┘           └────────┬─────────┘
+             │                              │
+             │ 1:N                          │ 1:N
+             │                              │
+             └──────────────┬───────────────┘
+                            │
+                            ▼
+                 ┌──────────────────────┐
+                 │   RADIOS_CIUDADES    │
+                 │    (Tabla pivot)     │
+                 │   Relacion N:N       │
+                 └──────────────────────┘
+
+    * ON DELETE CASCADE: Si se elimina una radio o ciudad,
+      se eliminan sus asignaciones automaticamente.
+    * Define que radios operan en cada ciudad.
+
+
+================================================================================
+                               INDICES
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Nombre                              │ Tabla/Columnas                        │
+├─────────────────────────────────────┼───────────────────────────────────────┤
+│ idx_comerciales_asignados_codigo    │ ComercialesAsignados(Codigo)          │
+│ idx_comerciales_asignados_fila_col  │ ComercialesAsignados(Fila, Columna)   │
+│ idx_comerciales_estado              │ Comerciales(Estado)                   │
+│ idx_comerciales_fechas              │ Comerciales(FechaInicio, FechaFinal)  │
+│ idx_comerciales_ciudad_radio        │ Comerciales(Ciudad, Radio)            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                         USUARIOS POR DEFECTO
+================================================================================
+
+┌─────────────┬─────────────┬───────────────┬─────────────────────────────────┐
+│ Usuario     │ Contrasena  │ Rol           │ Permisos                        │
+├─────────────┼─────────────┼───────────────┼─────────────────────────────────┤
+│ admin       │ admin123    │ Administrador │ - Administrar Ciudades          │
+│             │             │               │ - Administrar Tandas            │
+│             │             │               │ - Administrar Usuarios          │
+│             │             │               │ - Agregar/Programar Comerciales │
+│             │             │               │ - Generar Reportes              │
+├─────────────┼─────────────┼───────────────┼─────────────────────────────────┤
+│ usuario     │ usuario123  │ Usuario       │ - Agregar/Programar Comerciales │
+└─────────────┴─────────────┴───────────────┴─────────────────────────────────┘
+
+
+================================================================================
+                      DIAGRAMA ENTIDAD-RELACION
+================================================================================
+
+    ┌────────────┐         ┌────────────────────┐         ┌────────────┐
+    │  USUARIOS  │         │    COMERCIALES     │         │  CIUDADES  │
+    ├────────────┤         ├────────────────────┤         ├────────────┤
+    │ Id (PK)    │         │ Codigo (PK)        │◄────────│ Id (PK)    │
+    │ Usuario    │         │ FilePath           │ Ciudad  │ Nombre     │
+    │ Contrasena │         │ FechaInicio        │         │ Estado     │
+    │ Rol        │         │ FechaFinal         │         └──────┬─────┘
+    │ Nombre     │         │ Ciudad             │                │
+    │ Estado     │         │ Radio              │                │ 1:N
+    │ Fecha      │         │ Posicion           │                │
+    └────────────┘         │ Estado             │                ▼
+                           └─────────┬──────────┘     ┌──────────────────┐
+                                     │                │ RADIOS_CIUDADES  │
+                                     │ 1:N            │ (Tabla pivot)    │
+                                     │                ├──────────────────┤
+                                     ▼                │ Id (PK)          │
+                           ┌────────────────────┐     │ RadioId (FK)     │
+                           │ COMERCIALES        │     │ CiudadId (FK)    │
+                           │ ASIGNADOS          │     │ Estado           │
+                           ├────────────────────┤     └────────┬─────────┘
+                           │ Id (PK)            │              │
+                           │ Fila               │              │ N:1
+                           │ Columna            │              │
+                           │ ComercialAsignado  │              ▼
+                           │ Codigo (FK)        │     ┌──────────────────┐
+                           └────────────────────┘     │     RADIOS       │
+                                                      ├──────────────────┤
+    ┌────────────────┐                                │ Id (PK)          │
+    │ TANDAS         │                                │ Nombre           │
+    │ PROGRAMACION   │                                │ Descripcion      │
+    ├────────────────┤                                │ Estado           │
+    │ Id (PK)        │                                └──────────────────┘
+    │ Nombre         │
+    │ Horarios       │
+    │ Estado         │
+    └────────────────┘
+
+
+================================================================================
+                         FLUJO DE DATOS
+================================================================================
+
+1. CREAR COMERCIAL:
+   Usuario → Form Agregar_Comerciales → Tabla COMERCIALES
+                                      → Tabla COMERCIALES_ASIGNADOS (celdas)
+
+2. CARGAR COMERCIAL:
+   Tabla COMERCIALES + COMERCIALES_ASIGNADOS → Form Agregar_Comerciales → UI
+
+3. VISTA PREVIA SPOTS (por hora/dia):
+   Seleccionar celda → Query JOIN COMERCIALES + COMERCIALES_ASIGNADOS
+                     → Filtrar por Fila, Columna, Ciudad, Radio, Fechas
+                     → Mostrar en dgv_previa
+
+4. ADMINISTRAR CIUDADES:
+   Admin → AdminCiudadesForm → Tabla CIUDADES → ComboBox cboCiudad
+                                              → dgv_ciudades (Form1)
+
+5. ADMINISTRAR RADIOS:
+   Admin → AdminRadiosForm → Tabla RADIOS → ComboBox cboRadio
+                           → Tabla RADIOS_CIUDADES → dgv_estaciones (Form1)
+
+   * Filtrar radios por ciudad:
+     Seleccionar Ciudad → Query RADIOS_CIUDADES → Mostrar solo radios
+                                                  de esa ciudad
+
+6. AUTENTICACION:
+   LoginForm → Verificar Usuario/Contrasena → Tabla USUARIOS → Asignar Rol
+
+
+================================================================================
+                    CONFIGURACION DE CONEXION
+================================================================================
+
+Archivo: config.ini
+
+[Database]
+; LOCAL:
+DatabasePath=Data.db
+
+; RED (ejemplo):
+; DatabasePath=\\servidor\compartido\Data.db
+; DatabasePath=\\192.168.1.100\Compartida\GeneradorPautas\Data.db
+
+Connection String: "Data Source={ruta};Version=3;"
+
+
+================================================================================

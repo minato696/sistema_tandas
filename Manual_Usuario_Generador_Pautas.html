@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual de Usuario - Generador de Pautas</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+        }
+
+        .cover-page {
+            text-align: center;
+            padding: 100px 0;
+            page-break-after: always;
+        }
+
+        .cover-page h1 {
+            font-size: 36px;
+            color: #0078D7;
+            margin-bottom: 20px;
+        }
+
+        .cover-page .subtitle {
+            font-size: 24px;
+            color: #666;
+            margin-bottom: 50px;
+        }
+
+        .cover-page .version {
+            font-size: 16px;
+            color: #888;
+            margin-top: 100px;
+        }
+
+        .cover-page .logo {
+            font-size: 80px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #0078D7;
+            border-bottom: 3px solid #0078D7;
+            padding-bottom: 10px;
+            page-break-after: avoid;
+        }
+
+        h2 {
+            color: #2E7D32;
+            margin-top: 30px;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            color: #1565C0;
+            margin-top: 20px;
+            page-break-after: avoid;
+        }
+
+        .step-box {
+            background: #E3F2FD;
+            border-left: 4px solid #1976D2;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #1976D2;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .tip-box {
+            background: #FFF3E0;
+            border-left: 4px solid #FF9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .tip-box::before {
+            content: "💡 Consejo: ";
+            font-weight: bold;
+            color: #E65100;
+        }
+
+        .warning-box {
+            background: #FFEBEE;
+            border-left: 4px solid #F44336;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .warning-box::before {
+            content: "⚠️ Importante: ";
+            font-weight: bold;
+            color: #C62828;
+        }
+
+        .success-box {
+            background: #E8F5E9;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .button {
+            display: inline-block;
+            background: #1976D2;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 2px;
+        }
+
+        .button.green { background: #4CAF50; }
+        .button.red { background: #F44336; }
+        .button.orange { background: #FF9800; }
+        .button.purple { background: #9C27B0; }
+        .button.gray { background: #607D8B; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background: #0078D7;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .toc {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .toc h2 {
+            margin-top: 0;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .toc li {
+            padding: 5px 0;
+            border-bottom: 1px dotted #ccc;
+        }
+
+        .toc a {
+            color: #1976D2;
+            text-decoration: none;
+        }
+
+        .screenshot-placeholder {
+            background: #ECEFF1;
+            border: 2px dashed #90A4AE;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            border-radius: 8px;
+            color: #546E7A;
+        }
+
+        .icon {
+            font-size: 24px;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        ul li, ol li {
+            margin: 8px 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .feature-card h4 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+
+        .keyboard-shortcut {
+            background: #ECEFF1;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            border: 1px solid #B0BEC5;
+        }
+    </style>
+</head>
+<body>
+    <!-- PORTADA -->
+    <div class="cover-page">
+        <div class="logo">📻</div>
+        <h1>GENERADOR DE PAUTAS</h1>
+        <div class="subtitle">Manual de Usuario</div>
+        <p>Sistema de Gestión de Comerciales para Radio</p>
+        <div class="version">
+            <p>Versión 2.0</p>
+            <p>Corporación Universal</p>
+            <p>2026</p>
+        </div>
+    </div>
+
+    <!-- ÍNDICE -->
+    <div class="toc">
+        <h2>📋 Índice de Contenidos</h2>
+        <ul>
+            <li><a href="#intro">1. Introducción al Sistema</a></li>
+            <li><a href="#login">2. Inicio de Sesión</a></li>
+            <li><a href="#pantalla-principal">3. Pantalla Principal</a></li>
+            <li><a href="#agregar-comerciales">4. Agregar Comerciales</a></li>
+            <li><a href="#generar-pauta">5. Generar Pauta</a></li>
+            <li><a href="#ver-pautas">6. Ver Pautas por Comercial</a></li>
+            <li><a href="#filtros">7. Búsqueda y Filtros</a></li>
+            <li><a href="#dashboard">8. Dashboard de Estadísticas</a></li>
+            <li><a href="#administracion">9. Administración del Sistema</a></li>
+            <li><a href="#reportes">10. Generación de Reportes</a></li>
+            <li><a href="#importar">11. Importar desde Excel</a></li>
+            <li><a href="#reproductor">12. Reproductor de Audio</a></li>
+            <li><a href="#faq">13. Preguntas Frecuentes</a></li>
+        </ul>
+    </div>
+
+    <!-- SECCIÓN 1: INTRODUCCIÓN -->
+    <div class="page-break"></div>
+    <h1 id="intro">1. 📖 Introducción al Sistema</h1>
+
+    <p>El <strong>Generador de Pautas</strong> es una aplicación diseñada para facilitar la gestión y programación de comerciales en estaciones de radio. Con este sistema podrás:</p>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h4>📁 Gestionar Comerciales</h4>
+            <p>Agregar, editar y organizar todos los spots publicitarios de tu estación.</p>
+        </div>
+        <div class="feature-card">
+            <h4>📅 Programar Tandas</h4>
+            <p>Asignar comerciales a horarios específicos según diferentes tipos de tandas.</p>
+        </div>
+        <div class="feature-card">
+            <h4>📊 Ver Estadísticas</h4>
+            <p>Monitorear el estado de los comerciales con el dashboard interactivo.</p>
+        </div>
+        <div class="feature-card">
+            <h4>📄 Generar Reportes</h4>
+            <p>Exportar información a Excel para análisis y control.</p>
+        </div>
+    </div>
+
+    <h2>Requisitos del Sistema</h2>
+    <table>
+        <tr>
+            <th>Componente</th>
+            <th>Requisito</th>
+        </tr>
+        <tr>
+            <td>Sistema Operativo</td>
+            <td>Windows 10 o superior</td>
+        </tr>
+        <tr>
+            <td>Resolución Mínima</td>
+            <td>1366 x 768 píxeles</td>
+        </tr>
+        <tr>
+            <td>.NET Framework</td>
+            <td>4.8 o superior</td>
+        </tr>
+        <tr>
+            <td>Base de Datos</td>
+            <td>PostgreSQL (conexión de red)</td>
+        </tr>
+    </table>
+
+    <!-- SECCIÓN 2: INICIO DE SESIÓN -->
+    <div class="page-break"></div>
+    <h1 id="login">2. 🔐 Inicio de Sesión</h1>
+
+    <p>Al abrir la aplicación, lo primero que verás es la pantalla de inicio de sesión.</p>
+
+    <div class="screenshot-placeholder">
+        📷 Pantalla de Login
+    </div>
+
+    <h3>Pasos para Iniciar Sesión:</h3>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        <strong>Ingresa tu Usuario:</strong> Escribe tu nombre de usuario en el primer campo.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        <strong>Ingresa tu Contraseña:</strong> Escribe tu contraseña (aparecerá con asteriscos por seguridad).
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        <strong>Recordar Sesión (Opcional):</strong> Marca la casilla ☑️ "Recordar sesión" si deseas que el sistema guarde tus credenciales.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">4</span>
+        <strong>Haz clic en:</strong> <span class="button green">Iniciar Sesión</span>
+    </div>
+
+    <div class="tip-box">
+        Si olvidaste tu contraseña, contacta al administrador del sistema para que te la restablezca.
+    </div>
+
+    <div class="warning-box">
+        Después de 3 intentos fallidos, tu cuenta podría bloquearse temporalmente por seguridad.
+    </div>
+
+    <!-- SECCIÓN 3: PANTALLA PRINCIPAL -->
+    <div class="page-break"></div>
+    <h1 id="pantalla-principal">3. 🏠 Pantalla Principal</h1>
+
+    <p>Una vez que inicies sesión, verás la pantalla principal del sistema dividida en varias secciones:</p>
+
+    <div class="screenshot-placeholder">
+        📷 Vista General de la Pantalla Principal
+    </div>
+
+    <h2>3.1 Panel Izquierdo - Explorador de Archivos</h2>
+    <p>En esta sección puedes:</p>
+    <ul>
+        <li>🔍 <strong>Navegar carpetas:</strong> Busca archivos de audio en tu computadora</li>
+        <li>🎵 <strong>Ver archivos de audio:</strong> Los archivos MP3 y WAV aparecerán listados</li>
+        <li>▶️ <strong>Doble clic para agregar:</strong> Al hacer doble clic en un audio, se agrega a la lista de reproducción</li>
+    </ul>
+
+    <h2>3.2 Panel Central - Lista de Comerciales</h2>
+    <p>Aquí se muestra la tabla con todos los comerciales registrados en el sistema:</p>
+
+    <table>
+        <tr>
+            <th>Columna</th>
+            <th>Descripción</th>
+        </tr>
+        <tr>
+            <td><strong>Código</strong></td>
+            <td>Identificador único del comercial (ej: CU-001)</td>
+        </tr>
+        <tr>
+            <td><strong>Spot</strong></td>
+            <td>Nombre del archivo de audio</td>
+        </tr>
+        <tr>
+            <td><strong>Inicia</strong></td>
+            <td>Fecha de inicio de vigencia</td>
+        </tr>
+        <tr>
+            <td><strong>Hasta</strong></td>
+            <td>Fecha de fin de vigencia</td>
+        </tr>
+        <tr>
+            <td><strong>Ciudad</strong></td>
+            <td>Ciudad donde se transmite</td>
+        </tr>
+        <tr>
+            <td><strong>Radio</strong></td>
+            <td>Estación de radio asignada</td>
+        </tr>
+        <tr>
+            <td><strong>Pos</strong></td>
+            <td>Posición en la tanda (P01, P02, etc.)</td>
+        </tr>
+        <tr>
+            <td><strong>Estado</strong></td>
+            <td>Activo o Inactivo</td>
+        </tr>
+    </table>
+
+    <h2>3.3 Barra de Herramientas</h2>
+    <p>Los botones principales de acción:</p>
+
+    <p>
+        <span class="button green">+ Agregar Spot</span> - Abre el formulario para crear un nuevo comercial<br><br>
+        <span class="button red">- Eliminar Spot</span> - Elimina los comerciales seleccionados<br><br>
+        <span class="button orange">Desactivar Spot</span> - Cambia el estado del comercial a Inactivo<br><br>
+        <span class="button green">Generar</span> - Genera la pauta del comercial seleccionado<br><br>
+        <span class="button purple">Pautas</span> - Ver todas las pautas de un comercial
+    </p>
+
+    <h2>3.4 Controles de Paginación</h2>
+    <p>Como el sistema puede tener miles de comerciales, se muestran por páginas:</p>
+    <p>
+        <span class="button">|&lt;</span> Primera página &nbsp;
+        <span class="button">&lt;</span> Página anterior &nbsp;
+        <strong>1/5 (2,500)</strong> &nbsp;
+        <span class="button">&gt;</span> Siguiente página &nbsp;
+        <span class="button">&gt;|</span> Última página
+    </p>
+
+    <!-- SECCIÓN 4: AGREGAR COMERCIALES -->
+    <div class="page-break"></div>
+    <h1 id="agregar-comerciales">4. ➕ Agregar Comerciales</h1>
+
+    <p>Para agregar un nuevo comercial al sistema, sigue estos pasos:</p>
+
+    <h2>4.1 Abrir el Formulario</h2>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        <strong>Opción A:</strong> Haz clic en <span class="button green">+ Agregar Spot</span> en la barra de herramientas.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        <strong>Opción B:</strong> Haz doble clic en un archivo de audio en el explorador de la izquierda.
+    </div>
+
+    <div class="screenshot-placeholder">
+        📷 Formulario de Agregar Comerciales
+    </div>
+
+    <h2>4.2 Completar los Datos</h2>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        <strong>Código:</strong> Se genera automáticamente (ej: CU-001). No lo modifiques.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        <strong>Spot:</strong> Nombre del archivo de audio. Se llena automáticamente si seleccionaste un archivo.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        <strong>Ciudad:</strong> Selecciona la ciudad donde se transmitirá el comercial.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">4</span>
+        <strong>Radio:</strong> Selecciona la estación de radio (Exitosa, Karibeña, La Kalle, etc.).
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">5</span>
+        <strong>Fecha Inicio:</strong> Selecciona la fecha en que comienza a transmitirse.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">6</span>
+        <strong>Fecha Final:</strong> Selecciona la fecha en que termina la transmisión.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">7</span>
+        <strong>Posición:</strong> Selecciona la posición en la tanda (P01 = primera, P02 = segunda, etc.).
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">8</span>
+        <strong>Tipo de Tanda:</strong> Selecciona el tipo de programación:
+        <ul>
+            <li><strong>Cada 00-30:</strong> Comerciales a los minutos :00 y :30</li>
+            <li><strong>Cada 20-50:</strong> Comerciales a los minutos :20 y :50</li>
+            <li><strong>Cada 10-40:</strong> Comerciales a los minutos :10 y :40</li>
+            <li><strong>Cada 15-45:</strong> Comerciales a los minutos :15 y :45</li>
+        </ul>
+    </div>
+
+    <h2>4.3 Asignar Horarios en la Grilla</h2>
+
+    <p>La grilla muestra los días (columnas) y las horas (filas). Para asignar el comercial:</p>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        <strong>Modo Asignar:</strong> Haz clic en el botón <span class="button green">Asignar</span> (se pondrá verde).
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        <strong>Selecciona celdas:</strong> Haz clic en cada celda donde quieras que se transmita el comercial. La celda se pintará de color y mostrará el nombre del spot.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        <strong>Copiar un día:</strong> Haz clic derecho en la columna del día y selecciona "Copiar día".
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">4</span>
+        <strong>Pegar en otros días:</strong> Haz clic derecho en otro día y selecciona "Pegar día" o "Pegar en todos los días".
+    </div>
+
+    <div class="tip-box">
+        Para limpiar celdas, activa el modo <span class="button gray">Limpiar</span> y haz clic en las celdas que quieras vaciar.
+    </div>
+
+    <h2>4.4 Guardar el Comercial</h2>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Cuando hayas terminado de asignar los horarios, haz clic en <span class="button green">Guardar</span>.
+    </div>
+
+    <div class="success-box">
+        El comercial se guardará en la base de datos y aparecerá en la lista principal.
+    </div>
+
+    <!-- SECCIÓN 5: GENERAR PAUTA -->
+    <div class="page-break"></div>
+    <h1 id="generar-pauta">5. 📤 Generar Pauta</h1>
+
+    <p>La función "Generar Pauta" crea los archivos de programación que serán utilizados por el sistema de automatización de la radio.</p>
+
+    <h2>5.1 Desde la Pantalla Principal</h2>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        <strong>Selecciona un comercial:</strong> Haz clic en una fila de la tabla de comerciales.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        <strong>Haz clic en:</strong> <span class="button green">Generar</span>
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        <strong>Espera:</strong> El sistema procesará la información y generará los archivos.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">4</span>
+        <strong>Resultado:</strong> Se abrirá la carpeta donde se guardaron los archivos de pauta.
+    </div>
+
+    <h2>5.2 Desde el Formulario de Comerciales</h2>
+
+    <p>Si estás editando un comercial, también puedes generar la pauta directamente:</p>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Haz clic en <span class="button green">Generar Pauta</span> en la parte inferior del formulario.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        Verás una barra de progreso mientras se generan los archivos.
+    </div>
+
+    <div class="screenshot-placeholder">
+        📷 Barra de Progreso de Generación
+    </div>
+
+    <h2>5.3 Archivos Generados</h2>
+
+    <p>Los archivos de pauta se guardan con el siguiente formato:</p>
+    <p><code>DD-MM-AA[CIUDAD][RADIO].txt</code></p>
+    <p>Ejemplo: <code>15-01-26[LIMA][EXITOSA].txt</code></p>
+
+    <div class="tip-box">
+        Los archivos se organizan en carpetas por ciudad y radio para facilitar su distribución.
+    </div>
+
+    <!-- SECCIÓN 6: VER PAUTAS -->
+    <div class="page-break"></div>
+    <h1 id="ver-pautas">6. 👁️ Ver Pautas por Comercial</h1>
+
+    <p>Esta función te permite ver todas las fechas y horas en que un comercial específico está programado.</p>
+
+    <h2>6.1 Abrir la Ventana de Pautas</h2>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        <strong>Opción A:</strong> Selecciona un comercial y haz clic en <span class="button purple">Pautas</span>.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        <strong>Opción B:</strong> Haz clic derecho sobre un comercial y selecciona "Ver Pautas del Comercial".
+    </div>
+
+    <div class="screenshot-placeholder">
+        📷 Ventana Ver Pautas por Comercial
+    </div>
+
+    <h2>6.2 Buscar por Código</h2>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Ingresa el código del comercial (ej: CU-001) en el campo de búsqueda.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        Haz clic en <span class="button">Buscar</span>.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        La tabla mostrará todas las fechas, horas y días de la semana donde está programado.
+    </div>
+
+    <h2>6.3 Eliminar Pautas por Rango de Fechas</h2>
+
+    <p>Si necesitas eliminar las pautas de un comercial para un período específico:</p>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Selecciona la <strong>Fecha Inicial</strong> del rango a eliminar.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        Selecciona la <strong>Fecha Final</strong> del rango.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        Haz clic en <span class="button red">Eliminar por Fecha</span>.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">4</span>
+        Confirma la acción en el cuadro de diálogo.
+    </div>
+
+    <div class="warning-box">
+        Esta acción no se puede deshacer. Asegúrate de seleccionar el rango correcto antes de eliminar.
+    </div>
+
+    <!-- SECCIÓN 7: FILTROS -->
+    <div class="page-break"></div>
+    <h1 id="filtros">7. 🔍 Búsqueda y Filtros</h1>
+
+    <p>El sistema ofrece múltiples formas de buscar y filtrar comerciales:</p>
+
+    <h2>7.1 Filtro por Estado</h2>
+
+    <p>En la barra de filtros, usa el desplegable "Estado":</p>
+    <ul>
+        <li><strong>Todos:</strong> Muestra todos los comerciales</li>
+        <li><strong>Activo:</strong> Solo comerciales activos</li>
+        <li><strong>Inactivo:</strong> Solo comerciales inactivos</li>
+    </ul>
+
+    <h2>7.2 Búsqueda por Texto</h2>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Selecciona en qué columna buscar: Código, Spot, Ciudad, Radio o Estado.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        Escribe el texto a buscar en el campo de búsqueda.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        Haz clic en <span class="button">Buscar</span> o presiona <span class="keyboard-shortcut">Enter</span>.
+    </div>
+
+    <h2>7.3 Filtro por Ciudad y Radio</h2>
+
+    <p>En la parte inferior derecha de la pantalla:</p>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        <strong>Selecciona una ciudad:</strong> Haz clic en la tabla "CIUDADES".
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        <strong>Selecciona una radio:</strong> Haz clic en la tabla "ESTACIONES".
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        <strong>Activa el filtro:</strong> Marca la casilla ☑️ <strong>Filtrar</strong>.
+    </div>
+
+    <h2>7.4 Filtro por Fechas</h2>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Selecciona la fecha inicial en el primer calendario.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        Selecciona la fecha final en el segundo calendario.
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        Marca la casilla ☑️ <strong>Filtrar</strong> para aplicar.
+    </div>
+
+    <h2>7.5 Limpiar Filtros</h2>
+
+    <p>Para volver a ver todos los comerciales:</p>
+    <p>Haz clic en <span class="button gray">Limpiar</span> en la barra de filtros.</p>
+
+    <!-- SECCIÓN 8: DASHBOARD -->
+    <div class="page-break"></div>
+    <h1 id="dashboard">8. 📊 Dashboard de Estadísticas</h1>
+
+    <p>El Dashboard muestra un resumen visual del estado de todos los comerciales en el sistema.</p>
+
+    <div class="screenshot-placeholder">
+        📷 Dashboard de Comerciales
+    </div>
+
+    <h2>8.1 Tarjetas de Estadísticas</h2>
+
+    <table>
+        <tr>
+            <th>Tarjeta</th>
+            <th>Color</th>
+            <th>Descripción</th>
+        </tr>
+        <tr>
+            <td><strong>Total</strong></td>
+            <td style="background:#1976D2;color:white;">Azul</td>
+            <td>Cantidad total de comerciales en el sistema</td>
+        </tr>
+        <tr>
+            <td><strong>Activos</strong></td>
+            <td style="background:#4CAF50;color:white;">Verde</td>
+            <td>Comerciales actualmente activos</td>
+        </tr>
+        <tr>
+            <td><strong>Inactivos</strong></td>
+            <td style="background:#9E9E9E;color:white;">Gris</td>
+            <td>Comerciales desactivados</td>
+        </tr>
+        <tr>
+            <td><strong>Por Vencer</strong></td>
+            <td style="background:#FF9800;color:white;">Naranja</td>
+            <td>Comerciales que vencen en los próximos 7 días</td>
+        </tr>
+        <tr>
+            <td><strong>Vencidos</strong></td>
+            <td style="background:#F44336;color:white;">Rojo</td>
+            <td>Comerciales cuya fecha final ya pasó</td>
+        </tr>
+    </table>
+
+    <h2>8.2 Panel de Alertas</h2>
+
+    <p>El panel de alertas muestra los comerciales que están próximos a vencer, ordenados por fecha:</p>
+
+    <div class="warning-box">
+        Cuando un comercial está a punto de vencer, aparecerá una alerta en color naranja o rojo según la urgencia.
+    </div>
+
+    <h2>8.3 Acciones desde el Dashboard</h2>
+
+    <p>Puedes hacer clic en las tarjetas para ver los detalles:</p>
+    <ul>
+        <li>🖱️ <strong>Clic en "Por Vencer":</strong> Abre una lista con los comerciales próximos a vencer</li>
+        <li>🖱️ <strong>Clic en "Vencidos":</strong> Abre una lista con los comerciales ya vencidos</li>
+    </ul>
+
+    <div class="tip-box">
+        El Dashboard se actualiza automáticamente cada minuto. También puedes hacer clic en cualquier tarjeta para refrescar los datos.
+    </div>
+
+    <!-- SECCIÓN 9: ADMINISTRACIÓN -->
+    <div class="page-break"></div>
+    <h1 id="administracion">9. ⚙️ Administración del Sistema</h1>
+
+    <div class="warning-box">
+        Las funciones de administración solo están disponibles para usuarios con rol de <strong>Administrador</strong>.
+    </div>
+
+    <p>El menú de administración se encuentra en la barra superior: <strong>Administración</strong></p>
+
+    <h2>9.1 Administrar Ciudades</h2>
+
+    <div class="screenshot-placeholder">
+        📷 Formulario de Administración de Ciudades
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Ve a <strong>Administración → Administrar Ciudades</strong>
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        Para agregar: Escribe el nombre de la ciudad y haz clic en <span class="button green">Agregar</span>
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        Para eliminar: Selecciona la ciudad y haz clic en <span class="button red">Eliminar</span>
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">4</span>
+        Haz clic en <span class="button">Guardar</span> para aplicar los cambios
+    </div>
+
+    <h2>9.2 Administrar Radios</h2>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Ve a <strong>Administración → Administrar Radios</strong>
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        Ingresa el nombre de la radio y su descripción
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        Selecciona las ciudades donde transmite esta radio (checkboxes)
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">4</span>
+        Haz clic en <span class="button green">Agregar</span> y luego en <span class="button">Guardar</span>
+    </div>
+
+    <h2>9.3 Administrar Tandas</h2>
+
+    <p>Las tandas definen los horarios de transmisión:</p>
+
+    <table>
+        <tr>
+            <th>Tipo de Tanda</th>
+            <th>Minutos</th>
+            <th>Tandas por día</th>
+        </tr>
+        <tr>
+            <td>Cada 00-30</td>
+            <td>:00 y :30</td>
+            <td>48 tandas</td>
+        </tr>
+        <tr>
+            <td>Cada 20-50</td>
+            <td>:20 y :50</td>
+            <td>48 tandas</td>
+        </tr>
+        <tr>
+            <td>Cada 10-40</td>
+            <td>:10 y :40</td>
+            <td>48 tandas</td>
+        </tr>
+        <tr>
+            <td>Cada 15-45</td>
+            <td>:15 y :45</td>
+            <td>48 tandas</td>
+        </tr>
+    </table>
+
+    <h2>9.4 Administrar Usuarios</h2>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Ve a <strong>Administración → Administrar Usuarios</strong>
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        Completa: Usuario, Contraseña, Nombre Completo
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        Selecciona el Rol: <strong>Administrador</strong> o <strong>Usuario</strong>
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">4</span>
+        Selecciona el Estado: <strong>Activo</strong> o <strong>Inactivo</strong>
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">5</span>
+        Haz clic en <span class="button green">Agregar</span>
+    </div>
+
+    <div class="tip-box">
+        Para cambiar la contraseña de un usuario existente, selecciónalo de la lista y usa el botón "Cambiar Contraseña".
+    </div>
+
+    <!-- SECCIÓN 10: REPORTES -->
+    <div class="page-break"></div>
+    <h1 id="reportes">10. 📄 Generación de Reportes</h1>
+
+    <p>El sistema permite exportar información a archivos Excel para análisis y control.</p>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Haz clic en <strong>Reportes</strong> en el menú principal.
+    </div>
+
+    <div class="screenshot-placeholder">
+        📷 Formulario de Reportes
+    </div>
+
+    <h2>10.1 Reporte de Comerciales por Fecha</h2>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Selecciona la pestaña "Comerciales por Fecha"
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        Configura los filtros:
+        <ul>
+            <li>Fecha de inicio y fin</li>
+            <li>Ciudad (opcional)</li>
+            <li>Radio (opcional)</li>
+        </ul>
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        Haz clic en <span class="button green">Generar Reporte</span>
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">4</span>
+        Selecciona dónde guardar el archivo Excel
+    </div>
+
+    <h2>10.2 Reporte Resumen</h2>
+
+    <p>Genera estadísticas resumidas de los comerciales:</p>
+    <ul>
+        <li>Total de comerciales por estado</li>
+        <li>Distribución por ciudad</li>
+        <li>Distribución por radio</li>
+    </ul>
+
+    <h2>10.3 Formato del Archivo Excel</h2>
+
+    <p>Los reportes generados incluyen:</p>
+    <ul>
+        <li>✅ Encabezados con formato (fondo azul, texto blanco)</li>
+        <li>✅ Colores por estado (Verde = Activo, Gris = Inactivo)</li>
+        <li>✅ Columnas autoajustadas al contenido</li>
+        <li>✅ Fechas en formato dd/mm/yyyy</li>
+    </ul>
+
+    <!-- SECCIÓN 11: IMPORTAR -->
+    <div class="page-break"></div>
+    <h1 id="importar">11. 📥 Importar desde Excel</h1>
+
+    <p>Puedes importar pautas masivamente desde archivos Excel.</p>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Ve a <strong>Administración → Importar Pautas desde Excel</strong>
+    </div>
+
+    <div class="screenshot-placeholder">
+        📷 Formulario de Importación
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        Haz clic en <span class="button">Seleccionar archivo</span>
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">3</span>
+        Selecciona el archivo Excel (.xlsx) o texto (.txt)
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">4</span>
+        El sistema detectará automáticamente las tandas en el archivo
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">5</span>
+        Selecciona las tandas que deseas importar (checkboxes)
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">6</span>
+        Revisa la vista previa de los datos
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">7</span>
+        Haz clic en <span class="button green">Importar</span>
+    </div>
+
+    <div class="warning-box">
+        Asegúrate de que el archivo Excel tenga el formato correcto antes de importar. Contacta al administrador si tienes dudas sobre el formato.
+    </div>
+
+    <!-- SECCIÓN 12: REPRODUCTOR -->
+    <div class="page-break"></div>
+    <h1 id="reproductor">12. 🎵 Reproductor de Audio</h1>
+
+    <p>El sistema incluye un reproductor integrado para escuchar los spots antes de asignarlos.</p>
+
+    <h2>12.1 Agregar Archivos a la Lista</h2>
+
+    <div class="step-box">
+        <span class="step-number">1</span>
+        Navega por las carpetas en el explorador de archivos (panel izquierdo)
+    </div>
+
+    <div class="step-box">
+        <span class="step-number">2</span>
+        Haz doble clic en un archivo de audio para agregarlo a la lista
+    </div>
+
+    <h2>12.2 Controles del Reproductor</h2>
+
+    <p>Los botones del reproductor se encuentran en la parte inferior del panel izquierdo:</p>
+
+    <table>
+        <tr>
+            <th>Botón</th>
+            <th>Función</th>
+        </tr>
+        <tr>
+            <td><span class="button green">PLAY</span></td>
+            <td>Inicia la reproducción del audio seleccionado</td>
+        </tr>
+        <tr>
+            <td><span class="button red">STOP</span></td>
+            <td>Detiene la reproducción completamente</td>
+        </tr>
+        <tr>
+            <td><span class="button orange">PAUSE</span></td>
+            <td>Pausa la reproducción (puedes reanudar con PLAY)</td>
+        </tr>
+        <tr>
+            <td><span class="button gray">LIMPIAR</span></td>
+            <td>Elimina todos los archivos de la lista de reproducción</td>
+        </tr>
+    </table>
+
+    <h2>12.3 Barra de Progreso</h2>
+
+    <ul>
+        <li>📊 La barra superior muestra el progreso de la canción actual</li>
+        <li>🖱️ Puedes hacer clic y arrastrar para saltar a otra posición</li>
+        <li>📈 Las barras de nivel muestran el volumen del audio (izquierdo y derecho)</li>
+    </ul>
+
+    <h2>12.4 Información del Audio</h2>
+
+    <p>La lista de reproducción muestra:</p>
+    <ul>
+        <li><strong>#</strong> - Número de orden</li>
+        <li><strong>Nombre</strong> - Nombre del archivo</li>
+        <li><strong>Dur.</strong> - Duración total</li>
+        <li><strong>Pos.</strong> - Posición actual de reproducción</li>
+        <li><strong>Kbps</strong> - Calidad del audio (bitrate)</li>
+    </ul>
+
+    <!-- SECCIÓN 13: FAQ -->
+    <div class="page-break"></div>
+    <h1 id="faq">13. ❓ Preguntas Frecuentes</h1>
+
+    <h3>¿Cómo cambio mi contraseña?</h3>
+    <p>Contacta al administrador del sistema. Solo los administradores pueden cambiar contraseñas.</p>
+
+    <h3>¿Por qué no puedo ver el menú de Administración?</h3>
+    <p>El menú de Administración solo es visible para usuarios con rol de Administrador. Si necesitas acceso, solicítalo al administrador.</p>
+
+    <h3>¿Cómo desactivo un comercial sin eliminarlo?</h3>
+    <p>Selecciona el comercial en la lista y haz clic en <span class="button orange">Desactivar Spot</span>. El comercial quedará en estado "Inactivo" pero no se eliminará de la base de datos.</p>
+
+    <h3>¿Puedo editar un comercial después de crearlo?</h3>
+    <p>Sí. Haz doble clic sobre el comercial en la lista principal para abrir el formulario de edición.</p>
+
+    <h3>¿Qué pasa si genero la pauta dos veces?</h3>
+    <p>Los archivos anteriores serán reemplazados por los nuevos. No se crean duplicados.</p>
+
+    <h3>¿Cómo sé si un comercial está por vencer?</h3>
+    <p>El Dashboard muestra una tarjeta naranja "Por Vencer" con la cantidad de comerciales que vencen en los próximos 7 días. También aparecen alertas en el panel lateral.</p>
+
+    <h3>¿Por qué no se cargan los datos?</h3>
+    <p>Verifica tu conexión a la red. El sistema requiere conexión al servidor de base de datos PostgreSQL para funcionar.</p>
+
+    <h3>¿Cómo exporto los datos a Excel?</h3>
+    <p>Ve a <strong>Reportes</strong> en el menú principal, configura los filtros deseados y haz clic en "Generar Reporte".</p>
+
+    <h3>¿Puedo trabajar sin conexión a internet?</h3>
+    <p>No. El sistema requiere conexión a la base de datos central para garantizar que todos los usuarios trabajen con información actualizada.</p>
+
+    <hr>
+
+    <div style="text-align: center; margin-top: 50px; color: #666;">
+        <p><strong>GENERADOR DE PAUTAS</strong></p>
+        <p>Versión 2.0 - Manual de Usuario</p>
+        <p>© 2026 Corporación Universal</p>
+        <p>Contacto: dev@corporacionuniversal.pe</p>
+    </div>
+
+</body>
+</html>

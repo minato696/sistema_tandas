@@ -1,0 +1,22 @@
+[Database]
+; Tipo de base de datos: SQLite o PostgreSQL
+Type=PostgreSQL
+
+[PostgreSQL]
+; Configuracion de PostgreSQL
+Host=192.168.1.100
+Port=5432
+Database=generador_pautas
+Username=tu_usuario
+Password=tu_contraseña
+
+[Pautas]
+; Ruta de red donde se guardaran los archivos de pautas generados
+; Dejar vacio para usar la carpeta local
+RutaRed=
+
+[CarpetasRadios]
+; Carpetas donde se encuentran los archivos MP3 de cada radio
+; Formato: NombreRadio=RutaCarpeta
+RADIO1=C:\RADIO1\Comerciales\
+RADIO2=C:\RADIO2\Comerciales\

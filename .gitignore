@@ -1,0 +1,110 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.csproj.user
+
+# NuGet packages
+packages/
+*.nupkg
+*.snupkg
+.nuget/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Rider
+.idea/
+
+# User-specific files
+*.rsuser
+*.sln.IDE
+*.userprefs
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin
+$RECYCLE.BIN/
+
+# VS Code directories
+.vscode/
+
+# Windows shortcuts
+*.lnk
+
+# Logs
+*.log
+Log_*.txt
+
+# Database files (local)
+*.db
+*.db-journal
+*.sqlite
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# Config con credenciales (el usuario debe crear su propio config.ini)
+# config.ini
+
+# Archivos de audio (muy pesados para git)
+*.mp3
+*.wav
+*.ogg
+*.flac
+
+# Archivos de pautas generados
+pautas/
+
+# Backups locales
+Backups/
+
+# Archivos temporales de Claude
+tmpclaude-*
+.claude/
+
+# Archivos temporales y scripts de prueba
+nul
+*.rar
+test_*.py
+read_excel*.ps1
+verificar_importacion.cs
+
+# Instaladores generados
+Instalador_Output/
+innosetup_installer.exe
+
+# DLLs de terceros (se instalan via NuGet)
+Bass.Net.dll
+bass.dll
+
+# Ejecutables compilados en raíz
+*.exe
+
+# Config con credenciales (crear config.ini.example como plantilla)
+Generador_Pautas/config.ini

@@ -1853,53 +1853,25 @@ namespace Generador_Pautas
                     }
 
                     // Si no encontramos en Comerciales, buscar en ComercialesAsignados (comerciales importados)
-                    // Estos comerciales usan el Codigo directamente como identificador
-                    if (!string.IsNullOrEmpty(codigoNumerico) || !string.IsNullOrEmpty(filePath))
+                    // Buscar primero por FilePath (más confiable) ya que el código puede tener diferentes formatos
+                    if (!string.IsNullOrEmpty(filePath))
                     {
-                        string queryAsignados;
-                        if (!string.IsNullOrEmpty(codigoNumerico))
-                        {
-                            // Buscar por codigo en ComercialesAsignados
-                            queryAsignados = @"SELECT DISTINCT Codigo, Comercial as FilePath,
-                                    MIN(Fecha) as FechaInicio, MAX(Fecha) as FechaFinal,
-                                    Ciudad, Radio,
-                                    COALESCE(MAX(Posicion)::text, '1') as Posicion,
-                                    'Activo' as Estado,
-                                    TipoProgramacion
-                                FROM ComercialesAsignados
-                                WHERE Codigo = @CodigoNumerico
-                                  AND Ciudad = @Ciudad
-                                  AND Radio = @Radio
-                                GROUP BY Codigo, Comercial, Ciudad, Radio, TipoProgramacion
-                                LIMIT 1";
-                        }
-                        else
-                        {
-                            // Buscar por FilePath en ComercialesAsignados
-                            queryAsignados = @"SELECT DISTINCT Codigo, Comercial as FilePath,
-                                    MIN(Fecha) as FechaInicio, MAX(Fecha) as FechaFinal,
-                                    Ciudad, Radio,
-                                    COALESCE(MAX(Posicion)::text, '1') as Posicion,
-                                    'Activo' as Estado,
-                                    TipoProgramacion
-                                FROM ComercialesAsignados
-                                WHERE LOWER(Comercial) = LOWER(@FilePath)
-                                  AND Ciudad = @Ciudad
-                                  AND Radio = @Radio
-                                GROUP BY Codigo, Comercial, Ciudad, Radio, TipoProgramacion
-                                LIMIT 1";
-                        }
+                        string queryAsignados = @"SELECT DISTINCT Codigo, Comercial as FilePath,
+                                MIN(Fecha) as FechaInicio, MAX(Fecha) as FechaFinal,
+                                Ciudad, Radio,
+                                COALESCE(MAX(Posicion)::text, '1') as Posicion,
+                                'Activo' as Estado,
+                                TipoProgramacion
+                            FROM ComercialesAsignados
+                            WHERE LOWER(Comercial) = LOWER(@FilePath)
+                              AND Ciudad = @Ciudad
+                              AND Radio = @Radio
+                            GROUP BY Codigo, Comercial, Ciudad, Radio, TipoProgramacion
+                            LIMIT 1";
 
                         using (var cmd = new Npgsql.NpgsqlCommand(queryAsignados, conn))
                         {
-                            if (!string.IsNullOrEmpty(codigoNumerico))
-                            {
-                                cmd.Parameters.AddWithValue("@CodigoNumerico", codigoNumerico);
-                            }
-                            else
-                            {
-                                cmd.Parameters.AddWithValue("@FilePath", filePath);
-                            }
+                            cmd.Parameters.AddWithValue("@FilePath", filePath);
                             cmd.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
                             cmd.Parameters.AddWithValue("@Radio", radio ?? "");
 

@@ -1853,29 +1853,38 @@ namespace Generador_Pautas
                     }
 
                     // Si no encontramos en Comerciales, buscar en ComercialesAsignados (comerciales importados)
-                    // Buscar por nombre de archivo (ComercialAsignado puede contener ruta completa, solo nombre, o sin extensión)
+                    // ComercialesAsignados solo tiene: Fila, Columna, ComercialAsignado, Codigo, Fecha
+                    // Ciudad/Radio/TipoProgramacion vienen de la tabla Comerciales (si existe) o usamos los parámetros
                     if (!string.IsNullOrEmpty(filePath))
                     {
                         string nombreArchivo = System.IO.Path.GetFileName(filePath);
                         string nombreSinExtension = System.IO.Path.GetFileNameWithoutExtension(filePath);
 
-                        // Buscar por: ruta completa, nombre con extensión, o nombre sin extensión
-                        // ComercialAsignado a veces no tiene la extensión .mp3
-                        string queryAsignados = @"SELECT DISTINCT Codigo, ComercialAsignado as FilePath,
-                                MIN(Fecha) as FechaInicio, MAX(Fecha) as FechaFinal,
-                                Ciudad, Radio,
-                                COALESCE(MAX(Posicion)::text, '1') as Posicion,
-                                'Activo' as Estado,
-                                TipoProgramacion
-                            FROM ComercialesAsignados
-                            WHERE (LOWER(ComercialAsignado) = LOWER(@FilePath)
-                                   OR LOWER(ComercialAsignado) = LOWER(@NombreArchivo)
-                                   OR LOWER(ComercialAsignado) = LOWER(@NombreSinExt)
-                                   OR LOWER(ComercialAsignado) LIKE '%' || LOWER(@NombreArchivo)
-                                   OR LOWER(ComercialAsignado) LIKE '%' || LOWER(@NombreSinExt))
-                              AND Ciudad = @Ciudad
-                              AND Radio = @Radio
-                            GROUP BY Codigo, ComercialAsignado, Ciudad, Radio, TipoProgramacion
+                        System.Diagnostics.Debug.WriteLine($"[ObtenerDatos] Buscando en ComercialesAsignados:");
+                        System.Diagnostics.Debug.WriteLine($"[ObtenerDatos]   FilePath: {filePath}");
+                        System.Diagnostics.Debug.WriteLine($"[ObtenerDatos]   NombreArchivo: {nombreArchivo}");
+                        System.Diagnostics.Debug.WriteLine($"[ObtenerDatos]   NombreSinExt: {nombreSinExtension}");
+
+                        // Buscar en ComercialesAsignados y hacer JOIN con Comerciales para obtener Ciudad/Radio
+                        // Si no hay JOIN, usar los parámetros recibidos
+                        string queryAsignados = @"SELECT DISTINCT
+                                ca.Codigo,
+                                ca.ComercialAsignado as FilePath,
+                                MIN(ca.Fecha) as FechaInicio,
+                                MAX(ca.Fecha) as FechaFinal,
+                                COALESCE(c.Ciudad, @Ciudad) as Ciudad,
+                                COALESCE(c.Radio, @Radio) as Radio,
+                                COALESCE(c.Posicion, '1') as Posicion,
+                                COALESCE(c.Estado, 'Activo') as Estado,
+                                COALESCE(c.TipoProgramacion, 'Cada 15-45') as TipoProgramacion
+                            FROM ComercialesAsignados ca
+                            LEFT JOIN Comerciales c ON ca.Codigo = c.Codigo
+                            WHERE (LOWER(ca.ComercialAsignado) = LOWER(@FilePath)
+                                   OR LOWER(ca.ComercialAsignado) = LOWER(@NombreArchivo)
+                                   OR LOWER(ca.ComercialAsignado) = LOWER(@NombreSinExt)
+                                   OR LOWER(ca.ComercialAsignado) LIKE '%' || LOWER(@NombreArchivo)
+                                   OR LOWER(ca.ComercialAsignado) LIKE '%' || LOWER(@NombreSinExt))
+                            GROUP BY ca.Codigo, ca.ComercialAsignado, c.Ciudad, c.Radio, c.Posicion, c.Estado, c.TipoProgramacion
                             LIMIT 1";
 
                         using (var cmd = new Npgsql.NpgsqlCommand(queryAsignados, conn))
@@ -1890,6 +1899,7 @@ namespace Generador_Pautas
                             {
                                 if (await reader.ReadAsync())
                                 {
+                                    System.Diagnostics.Debug.WriteLine($"[ObtenerDatos] ENCONTRADO en ComercialesAsignados: Codigo={reader["Codigo"]}");
                                     return new AgregarComercialesData
                                     {
                                         Codigo = reader["Codigo"].ToString(),
@@ -1900,8 +1910,12 @@ namespace Generador_Pautas
                                         Radio = reader["Radio"].ToString(),
                                         Posicion = reader["Posicion"].ToString(),
                                         Estado = reader["Estado"].ToString(),
-                                        TipoProgramacion = reader["TipoProgramacion"]?.ToString() ?? "Cada 00-30 (48 tandas)"
+                                        TipoProgramacion = reader["TipoProgramacion"]?.ToString() ?? "Cada 15-45"
                                     };
+                                }
+                                else
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"[ObtenerDatos] NO encontrado en ComercialesAsignados");
                                 }
                             }
                         }

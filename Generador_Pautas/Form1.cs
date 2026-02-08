@@ -1853,12 +1853,14 @@ namespace Generador_Pautas
                     }
 
                     // Si no encontramos en Comerciales, buscar en ComercialesAsignados (comerciales importados)
-                    // Buscar por nombre de archivo (ComercialAsignado puede contener ruta completa o solo nombre)
+                    // Buscar por nombre de archivo (ComercialAsignado puede contener ruta completa, solo nombre, o sin extensión)
                     if (!string.IsNullOrEmpty(filePath))
                     {
                         string nombreArchivo = System.IO.Path.GetFileName(filePath);
+                        string nombreSinExtension = System.IO.Path.GetFileNameWithoutExtension(filePath);
 
-                        // Buscar por ruta completa O por nombre de archivo
+                        // Buscar por: ruta completa, nombre con extensión, o nombre sin extensión
+                        // ComercialAsignado a veces no tiene la extensión .mp3
                         string queryAsignados = @"SELECT DISTINCT Codigo, ComercialAsignado as FilePath,
                                 MIN(Fecha) as FechaInicio, MAX(Fecha) as FechaFinal,
                                 Ciudad, Radio,
@@ -1867,7 +1869,10 @@ namespace Generador_Pautas
                                 TipoProgramacion
                             FROM ComercialesAsignados
                             WHERE (LOWER(ComercialAsignado) = LOWER(@FilePath)
-                                   OR LOWER(ComercialAsignado) LIKE '%' || LOWER(@NombreArchivo))
+                                   OR LOWER(ComercialAsignado) = LOWER(@NombreArchivo)
+                                   OR LOWER(ComercialAsignado) = LOWER(@NombreSinExt)
+                                   OR LOWER(ComercialAsignado) LIKE '%' || LOWER(@NombreArchivo)
+                                   OR LOWER(ComercialAsignado) LIKE '%' || LOWER(@NombreSinExt))
                               AND Ciudad = @Ciudad
                               AND Radio = @Radio
                             GROUP BY Codigo, ComercialAsignado, Ciudad, Radio, TipoProgramacion
@@ -1877,6 +1882,7 @@ namespace Generador_Pautas
                         {
                             cmd.Parameters.AddWithValue("@FilePath", filePath);
                             cmd.Parameters.AddWithValue("@NombreArchivo", nombreArchivo);
+                            cmd.Parameters.AddWithValue("@NombreSinExt", nombreSinExtension);
                             cmd.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
                             cmd.Parameters.AddWithValue("@Radio", radio ?? "");
 

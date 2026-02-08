@@ -196,7 +196,7 @@ namespace Generador_Pautas
                         using (NpgsqlCommand cmdSelect = new NpgsqlCommand("", connection, transaction))
                         {
                             cmdSelect.CommandText = @"SELECT Codigo FROM Comerciales
-                                                      WHERE FilePath = @FilePath
+                                                      WHERE LOWER(FilePath) = LOWER(@FilePath)
                                                         AND Ciudad = @Ciudad
                                                         AND Radio = @Radio";
                             cmdSelect.Parameters.AddWithValue("@FilePath", filePath);
@@ -227,7 +227,7 @@ namespace Generador_Pautas
                         using (NpgsqlCommand cmdDelete = new NpgsqlCommand("", connection, transaction))
                         {
                             cmdDelete.CommandText = @"DELETE FROM Comerciales
-                                                      WHERE FilePath = @FilePath
+                                                      WHERE LOWER(FilePath) = LOWER(@FilePath)
                                                         AND Ciudad = @Ciudad
                                                         AND Radio = @Radio";
                             cmdDelete.Parameters.AddWithValue("@FilePath", filePath);
@@ -790,10 +790,10 @@ namespace Generador_Pautas
 
                 string whereClause = condiciones.Count > 0 ? "WHERE " + string.Join(" AND ", condiciones) : "";
 
-                // Query con GROUP BY
+                // Query con GROUP BY - usar LOWER para normalizar rutas (Windows es case-insensitive)
                 string query = $@"
                     SELECT
-                        FilePath,
+                        MAX(FilePath) as FilePath,
                         COALESCE(NULLIF(split_part(Codigo, '-', 2), ''), Codigo) as CodigoNumerico,
                         Ciudad,
                         Radio,
@@ -804,7 +804,7 @@ namespace Generador_Pautas
                         MAX(Estado) as EstadoGeneral
                     FROM {tableName}
                     {whereClause}
-                    GROUP BY FilePath, COALESCE(NULLIF(split_part(Codigo, '-', 2), ''), Codigo), Ciudad, Radio
+                    GROUP BY LOWER(FilePath), COALESCE(NULLIF(split_part(Codigo, '-', 2), ''), Codigo), Ciudad, Radio
                     ORDER BY MAX(FechaFinal) DESC
                     LIMIT {limite} OFFSET {offset}";
 
@@ -908,7 +908,7 @@ namespace Generador_Pautas
                 string query = $@"
                     SELECT Codigo, FilePath, FechaInicio, FechaFinal, Ciudad, Radio, Posicion, Estado, TipoProgramacion
                     FROM {tableName}
-                    WHERE FilePath = @FilePath
+                    WHERE LOWER(FilePath) = LOWER(@FilePath)
                     ORDER BY Ciudad, Radio, FechaInicio";
 
                 using (var cmd = new NpgsqlCommand(query, conn))
@@ -1038,13 +1038,13 @@ namespace Generador_Pautas
             {
                 await conn.OpenAsync();
 
-                // Construir condiciones WHERE - usar solo FilePath para buscar
+                // Construir condiciones WHERE - usar solo FilePath para buscar (case-insensitive)
                 // Los filtros de ciudad/radio se aplicarán después si es necesario
                 // Esto soluciona problemas de coincidencia por diferencias de encoding o espacios
                 string query = @"
                     SELECT Codigo, FechaInicio, FechaFinal, TipoProgramacion, Ciudad, Radio
                     FROM Comerciales
-                    WHERE FilePath = @FilePath
+                    WHERE LOWER(FilePath) = LOWER(@FilePath)
                     ORDER BY Codigo";
 
                 Logger.Log($"DB - ObtenerFechasHoras - FilePath: {filePath}");
@@ -1511,7 +1511,7 @@ namespace Generador_Pautas
                 await conn.OpenAsync();
                 string query = $@"
                     SELECT COUNT(*) FROM {tableName}
-                    WHERE FilePath = @FilePath
+                    WHERE LOWER(FilePath) = LOWER(@FilePath)
                       AND Ciudad = @Ciudad
                       AND Radio = @Radio
                       AND NOT (FechaFinal < @FechaInicio OR FechaInicio > @FechaFin)";

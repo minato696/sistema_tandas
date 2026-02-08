@@ -169,6 +169,7 @@ namespace Generador_Pautas
 
             // Configurar eventos para dgv_archivos
             dgv_archivos.CellDoubleClick += dgv_archivos_CellDoubleClick;
+            dgv_archivos.SelectionChanged += dgv_archivos_SelectionChanged;
             ConfigurarMenuContextualDGVArchivos();
 
             // Configurar evento para dgv_base
@@ -2815,6 +2816,20 @@ namespace Generador_Pautas
             }
         }
 
+        private void dgv_archivos_SelectionChanged(object sender, EventArgs e)
+        {
+            // Al seleccionar un archivo, cargarlo automáticamente en Pauteo Rápido
+            if (dgv_archivos.SelectedRows.Count > 0)
+            {
+                int rowIndex = dgv_archivos.SelectedRows[0].Index;
+                if (rowIndex >= 0 && rowIndex < songPaths.Count)
+                {
+                    string audioPath = songPaths[rowIndex];
+                    EnviarAudioAPauteoRapidoManteniendo(audioPath);
+                }
+            }
+        }
+
         private void PautearComercial_Click(object sender, EventArgs e)
         {
             if (dgv_archivos.SelectedRows.Count > 0)
@@ -3397,6 +3412,18 @@ namespace Generador_Pautas
             {
                 pauteoRapidoPanel.SetAudioSeleccionado(audioPath);
                 pauteoRapidoPanel.SetCiudadRadio(_filtroCiudadActual, _filtroRadioActual);
+            }
+        }
+
+        /// <summary>
+        /// Envía un audio al panel de Pauteo Rápido manteniendo la configuración actual
+        /// Solo cambia el audio y avanza la posición automáticamente
+        /// </summary>
+        private void EnviarAudioAPauteoRapidoManteniendo(string audioPath)
+        {
+            if (pauteoRapidoPanel != null)
+            {
+                pauteoRapidoPanel.SetAudioManteniendo(audioPath);
             }
         }
 

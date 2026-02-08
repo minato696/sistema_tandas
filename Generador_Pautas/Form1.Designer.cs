@@ -239,9 +239,9 @@ namespace Generador_Pautas
             this.btn_limpiar.Text = "LIMPIAR";
             this.btn_limpiar.UseVisualStyleBackColor = false;
             this.btn_limpiar.Click += new System.EventHandler(this.btn_limpiar_Click);
-            //
-            // btn_pause (ahora es btn_eliminar_archivo)
-            //
+            // 
+            // btn_pause
+            // 
             this.btn_pause.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(152)))), ((int)(((byte)(0)))));
             this.btn_pause.FlatAppearance.BorderSize = 0;
             this.btn_pause.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -284,42 +284,33 @@ namespace Generador_Pautas
             this.btn_play.Text = "PLAY";
             this.btn_play.UseVisualStyleBackColor = false;
             this.btn_play.Click += new System.EventHandler(this.btn_play_Click);
-            //
+            // 
             // elegantProgressBar1
-            //
-            this.elegantProgressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            // 
+            this.elegantProgressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.elegantProgressBar1.Location = new System.Drawing.Point(8, 48);
-            this.elegantProgressBar1.Maximum = 100;
-            this.elegantProgressBar1.Minimum = 0;
             this.elegantProgressBar1.Name = "elegantProgressBar1";
             this.elegantProgressBar1.Size = new System.Drawing.Size(298, 20);
             this.elegantProgressBar1.TabIndex = 2;
-            this.elegantProgressBar1.Value = 0;
-            //
+            // 
             // progressBarRight
-            //
-            this.progressBarRight.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            // 
+            this.progressBarRight.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.progressBarRight.Location = new System.Drawing.Point(8, 28);
-            this.progressBarRight.Maximum = 100;
-            this.progressBarRight.Minimum = 0;
             this.progressBarRight.Name = "progressBarRight";
             this.progressBarRight.Size = new System.Drawing.Size(298, 12);
             this.progressBarRight.TabIndex = 1;
-            this.progressBarRight.Value = 0;
-            //
+            // 
             // progressBarLeft
-            //
-            this.progressBarLeft.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            // 
+            this.progressBarLeft.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.progressBarLeft.Location = new System.Drawing.Point(8, 12);
-            this.progressBarLeft.Maximum = 100;
-            this.progressBarLeft.Minimum = 0;
             this.progressBarLeft.Name = "progressBarLeft";
             this.progressBarLeft.Size = new System.Drawing.Size(298, 12);
             this.progressBarLeft.TabIndex = 0;
-            this.progressBarLeft.Value = 0;
             // 
             // pnlRight
             // 
@@ -549,9 +540,9 @@ namespace Generador_Pautas
             this.pnlToolbar.Padding = new System.Windows.Forms.Padding(8);
             this.pnlToolbar.Size = new System.Drawing.Size(1054, 50);
             this.pnlToolbar.TabIndex = 0;
-            //
+            // 
             // dashboardControl1
-            //
+            // 
             this.dashboardControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.dashboardControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(245)))));
             this.dashboardControl1.Location = new System.Drawing.Point(762, 0);
@@ -571,7 +562,7 @@ namespace Generador_Pautas
             this.pnlBottomRight.Location = new System.Drawing.Point(0, 524);
             this.pnlBottomRight.Name = "pnlBottomRight";
             this.pnlBottomRight.Padding = new System.Windows.Forms.Padding(10);
-            this.pnlBottomRight.Size = new System.Drawing.Size(1054, 200);
+            this.pnlBottomRight.Size = new System.Drawing.Size(1054, 160);
             this.pnlBottomRight.TabIndex = 1;
             // 
             // dgv_pautas

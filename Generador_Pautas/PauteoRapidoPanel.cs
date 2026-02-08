@@ -695,6 +695,33 @@ namespace Generador_Pautas
             lblEstado.ForeColor = Color.FromArgb(76, 175, 80);
         }
 
+        /// <summary>
+        /// Establece un nuevo audio manteniendo la configuración actual (fechas, días, tandas)
+        /// Solo cambia el audio y avanza la posición automáticamente
+        /// </summary>
+        public void SetAudioManteniendo(string audioPath)
+        {
+            _audioPathActual = audioPath;
+            txtAudioPath.Text = Path.GetFileName(audioPath);
+            btnGenerarRapido.Enabled = true;
+            lblEstado.Text = "Listo para generar";
+            lblEstado.ForeColor = Color.FromArgb(76, 175, 80);
+
+            // Avanzar posición automáticamente
+            AvanzarPosicion();
+        }
+
+        /// <summary>
+        /// Avanza la posición al siguiente valor disponible
+        /// </summary>
+        private void AvanzarPosicion()
+        {
+            if (cboPosicion.Items.Count > 0 && cboPosicion.SelectedIndex < cboPosicion.Items.Count - 1)
+            {
+                cboPosicion.SelectedIndex++;
+            }
+        }
+
         public void SetCiudadRadio(string ciudad, string radio)
         {
             _ciudadActual = ciudad;

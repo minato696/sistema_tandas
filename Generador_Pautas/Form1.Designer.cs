@@ -330,7 +330,7 @@ namespace Generador_Pautas
             this.pnlTopRight.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlTopRight.Location = new System.Drawing.Point(0, 0);
             this.pnlTopRight.Name = "pnlTopRight";
-            this.pnlTopRight.Size = new System.Drawing.Size(1054, 524);
+            this.pnlTopRight.Size = new System.Drawing.Size(1054, 564);
             this.pnlTopRight.TabIndex = 0;
             // 
             // dgv_base
@@ -362,7 +362,7 @@ namespace Generador_Pautas
             this.dgv_base.RowHeadersVisible = false;
             this.dgv_base.RowTemplate.Height = 32;
             this.dgv_base.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgv_base.Size = new System.Drawing.Size(1054, 424);
+            this.dgv_base.Size = new System.Drawing.Size(1054, 464);
             this.dgv_base.TabIndex = 2;
             this.dgv_base.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgv_base_CellDoubleClick);
             // 
@@ -559,7 +559,7 @@ namespace Generador_Pautas
             this.pnlBottomRight.Controls.Add(this.dgv_ciudades);
             this.pnlBottomRight.Controls.Add(this.dgv_estaciones);
             this.pnlBottomRight.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlBottomRight.Location = new System.Drawing.Point(0, 524);
+            this.pnlBottomRight.Location = new System.Drawing.Point(0, 564);
             this.pnlBottomRight.Name = "pnlBottomRight";
             this.pnlBottomRight.Padding = new System.Windows.Forms.Padding(10);
             this.pnlBottomRight.Size = new System.Drawing.Size(1054, 160);

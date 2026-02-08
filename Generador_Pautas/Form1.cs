@@ -3283,7 +3283,7 @@ namespace Generador_Pautas
             // Cambiar pnlBottomRight a Dock.Top para el Pauteo Rapido
             pnlBottomRight.Controls.Clear();
             pnlBottomRight.Dock = DockStyle.Top;
-            pnlBottomRight.Height = 480; // Altura para el pauteo rapido
+            pnlBottomRight.Height = 380; // Altura para el pauteo rapido (reducido para dar mas espacio a dgv_base)
             pauteoRapidoPanel.Panel.Dock = DockStyle.Fill;
             pnlBottomRight.Controls.Add(pauteoRapidoPanel.Panel);
 

@@ -192,7 +192,7 @@ namespace Generador_Pautas
 
             // Crear directorio una sola vez
             string rutaBasePautas = ConfigManager.ObtenerRutaBasePautas();
-            string directorioPautas = System.IO.Path.Combine(rutaBasePautas, ciudad.ToUpper(), radio.ToUpper());
+            string directorioPautas = System.IO.Path.Combine(rutaBasePautas, ciudad.ToUpper());
             if (!System.IO.Directory.Exists(directorioPautas))
             {
                 System.IO.Directory.CreateDirectory(directorioPautas);
@@ -1447,7 +1447,7 @@ namespace Generador_Pautas
 
                 // Obtener la ruta base de pautas
                 string rutaBasePautas = ConfigManager.ObtenerRutaBasePautas();
-                string directorioPautas = System.IO.Path.Combine(rutaBasePautas, ciudad.ToUpper(), radio.ToUpper());
+                string directorioPautas = System.IO.Path.Combine(rutaBasePautas, ciudad.ToUpper());
 
                 if (!System.IO.Directory.Exists(directorioPautas))
                 {
@@ -1532,7 +1532,7 @@ namespace Generador_Pautas
                 TipoTanda tipoTanda = await ObtenerTipoTandaDesdeBDAsync(ciudad, radio);
                 var horarios = TandasHorarias.GetHorarios(tipoTanda);
                 string rutaBasePautas = ConfigManager.ObtenerRutaBasePautas();
-                string directorioPautas = System.IO.Path.Combine(rutaBasePautas, ciudad.ToUpper(), radio.ToUpper());
+                string directorioPautas = System.IO.Path.Combine(rutaBasePautas, ciudad.ToUpper());
                 string carpetaBase = ConfigManager.ObtenerCarpetaRadio(radio);
 
                 if (!System.IO.Directory.Exists(directorioPautas))
@@ -1766,7 +1766,7 @@ namespace Generador_Pautas
             // Crear carpeta de pautas si no existe: RUTA_BASE/CIUDAD/RADIO/
             // Usa la ruta de red si esta configurada en config.ini, sino la carpeta local
             string rutaBasePautas = ConfigManager.ObtenerRutaBasePautas();
-            string carpetaPautas = System.IO.Path.Combine(rutaBasePautas, ciudad.ToUpper(), radio.ToUpper());
+            string carpetaPautas = System.IO.Path.Combine(rutaBasePautas, ciudad.ToUpper());
             if (!System.IO.Directory.Exists(carpetaPautas))
             {
                 System.IO.Directory.CreateDirectory(carpetaPautas);
@@ -1911,7 +1911,7 @@ namespace Generador_Pautas
 
             // Crear carpeta de pautas si no existe: RUTA_BASE/CIUDAD/RADIO/
             string rutaBasePautas = ConfigManager.ObtenerRutaBasePautas();
-            string carpetaPautas = System.IO.Path.Combine(rutaBasePautas, ciudad.ToUpper(), radio.ToUpper());
+            string carpetaPautas = System.IO.Path.Combine(rutaBasePautas, ciudad.ToUpper());
             if (!System.IO.Directory.Exists(carpetaPautas))
             {
                 System.IO.Directory.CreateDirectory(carpetaPautas);

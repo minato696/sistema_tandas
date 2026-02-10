@@ -7,10 +7,12 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Un4seen.Bass;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+
 namespace Generador_Pautas
 {
     public partial class Form1 : Form
@@ -21,11 +23,12 @@ namespace Generador_Pautas
         public List<string> songPaths = new List<string>();
         public const string SongTimeFormat = @"mm\:ss";
         public TimeSpan totalTime = new TimeSpan();
-        private Timer playbackTimer = new Timer();
+        private System.Windows.Forms.Timer playbackTimer = new System.Windows.Forms.Timer();
         public int currentPlayingRowIndex = -1; // -1 indica que ninguna fila está siendo reproducida
         private bool isDragging = false;
         private DGV_Form1 dgvForm;
         private DatabaseManager dbManager = new DatabaseManager(); // Crea una instancia de DatabaseManager
+        private ComercialService _comercialService = new ComercialService(); // Servicio de consultas de comerciales
         private DashboardControl _dashboardControl; // Dashboard real
         public BassPlayer BassPlayer { get; private set; }
         private AudioPlayer audioPlayer = new AudioPlayer();
@@ -174,6 +177,7 @@ namespace Generador_Pautas
 
             // Configurar evento para dgv_base
             dgv_base.SelectionChanged += dgv_base_SelectionChanged;
+            dgv_base.CellFormatting += dgv_base_CellFormatting;
 
             // Configurar eventos de filtro para dgv_estaciones y dgv_ciudades
             dgv_estaciones.SelectionChanged += dgv_estaciones_SelectionChanged;
@@ -536,7 +540,6 @@ namespace Generador_Pautas
             colArchivo.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
             dgv_base.Columns.Add(colArchivo);
 
-            dgv_base.Columns.Add("TotalRegistros", "Tandas");
             dgv_base.Columns.Add("Ciudad", "Ciudad");
             dgv_base.Columns.Add("Radio", "Radio");
             dgv_base.Columns.Add("FechaMinima", "Desde");
@@ -552,8 +555,7 @@ namespace Generador_Pautas
 
             // Configurar FillWeight para proporciones relativas
             dgv_base.Columns["Codigo"].FillWeight = 8;
-            dgv_base.Columns["NombreArchivo"].FillWeight = 40;
-            dgv_base.Columns["TotalRegistros"].FillWeight = 8;
+            dgv_base.Columns["NombreArchivo"].FillWeight = 45;
             dgv_base.Columns["Ciudad"].FillWeight = 12;
             dgv_base.Columns["Radio"].FillWeight = 12;
             dgv_base.Columns["FechaMinima"].FillWeight = 12;
@@ -563,8 +565,7 @@ namespace Generador_Pautas
 
             // Anchos minimos para que no se vean muy pequenas
             dgv_base.Columns["Codigo"].MinimumWidth = 50;
-            dgv_base.Columns["NombreArchivo"].MinimumWidth = 150;
-            dgv_base.Columns["TotalRegistros"].MinimumWidth = 50;
+            dgv_base.Columns["NombreArchivo"].MinimumWidth = 180;
             dgv_base.Columns["Ciudad"].MinimumWidth = 70;
             dgv_base.Columns["Radio"].MinimumWidth = 70;
             dgv_base.Columns["FechaMinima"].MinimumWidth = 75;
@@ -652,7 +653,6 @@ namespace Generador_Pautas
                         row["FilePath"].ToString(),
                         row["CodigoNumerico"].ToString(),
                         row["NombreArchivo"].ToString(),
-                        row["TotalRegistros"].ToString(),
                         row["Ciudad"].ToString(),
                         row["Radio"].ToString(),
                         Convert.ToDateTime(row["FechaMinima"]).ToString("dd/MM/yyyy"),
@@ -764,8 +764,6 @@ namespace Generador_Pautas
             string nombreArchivo = selectedRow.Cells["NombreArchivo"].Value?.ToString();
             string ciudad = selectedRow.Cells["Ciudad"].Value?.ToString();
             string radio = selectedRow.Cells["Radio"].Value?.ToString();
-            string tandas = selectedRow.Cells["TotalRegistros"].Value?.ToString();
-
             if (string.IsNullOrEmpty(filePath))
             {
                 MessageBox.Show("No se pudo obtener la información del comercial.", "Error",
@@ -775,7 +773,7 @@ namespace Generador_Pautas
 
             // Confirmar eliminación
             var result = MessageBox.Show(
-                $"¿Está seguro que desea eliminar el comercial?\n\nArchivo: {nombreArchivo}\nCódigo: {codigoNumerico}\nCiudad: {ciudad}\nRadio: {radio}\nTandas: {tandas}\n\nEsta acción eliminará TODAS las tandas de este comercial y regenerará los archivos de pautas.",
+                $"¿Está seguro que desea eliminar el comercial?\n\nArchivo: {nombreArchivo}\nCódigo: {codigoNumerico}\nCiudad: {ciudad}\nRadio: {radio}\n\nEsta acción eliminará TODAS las tandas de este comercial y regenerará los archivos de pautas.",
                 "Confirmar Eliminación",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning);
@@ -950,7 +948,6 @@ namespace Generador_Pautas
                         row["FilePath"].ToString(),
                         row["CodigoNumerico"].ToString(),
                         row["NombreArchivo"].ToString(),
-                        row["TotalRegistros"].ToString(),
                         row["Ciudad"].ToString(),
                         row["Radio"].ToString(),
                         Convert.ToDateTime(row["FechaMinima"]).ToString("dd/MM/yyyy"),
@@ -1368,6 +1365,84 @@ namespace Generador_Pautas
         }
 
         /// <summary>
+        /// Colorea las filas de dgv_base según el estado y la proximidad a vencer
+        /// - Rojo claro: Vencido (FechaMaxima < hoy)
+        /// - Amarillo claro: Por vencer (FechaMaxima <= hoy + 3 días)
+        /// - Verde claro: Activo con margen
+        /// - Gris claro: Inactivo
+        /// </summary>
+        private void dgv_base_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= dgv_base.Rows.Count)
+                return;
+
+            DataGridViewRow row = dgv_base.Rows[e.RowIndex];
+
+            // Obtener valores de la fila
+            string estado = row.Cells["EstadoGeneral"]?.Value?.ToString() ?? "";
+            string fechaMaximaStr = row.Cells["FechaMaxima"]?.Value?.ToString() ?? "";
+
+            // Colores base
+            Color backColor = Color.White;
+            Color foreColor = Color.FromArgb(30, 30, 30);
+
+            // Determinar color según estado y fecha
+            if (estado.ToLower() == "inactivo" || estado.ToLower() == "vencido")
+            {
+                // Inactivo/Vencido - Gris
+                backColor = Color.FromArgb(240, 240, 240);
+                foreColor = Color.FromArgb(120, 120, 120);
+            }
+            else if (DateTime.TryParse(fechaMaximaStr, out DateTime fechaMaxima))
+            {
+                DateTime hoy = DateTime.Today;
+                int diasRestantes = (fechaMaxima - hoy).Days;
+
+                if (diasRestantes < 0)
+                {
+                    // Vencido - Rojo claro
+                    backColor = Color.FromArgb(255, 230, 230);
+                    foreColor = Color.FromArgb(180, 0, 0);
+                }
+                else if (diasRestantes <= 3)
+                {
+                    // Por vencer (3 días o menos) - Amarillo/Naranja claro
+                    backColor = Color.FromArgb(255, 248, 220);
+                    foreColor = Color.FromArgb(180, 100, 0);
+                }
+                else if (diasRestantes <= 7)
+                {
+                    // Próximo a vencer (7 días) - Amarillo muy claro
+                    backColor = Color.FromArgb(255, 255, 230);
+                    foreColor = Color.FromArgb(100, 100, 0);
+                }
+                else
+                {
+                    // Activo con margen - Verde muy claro
+                    backColor = Color.FromArgb(235, 255, 235);
+                    foreColor = Color.FromArgb(0, 100, 0);
+                }
+            }
+
+            // Aplicar colores solo si la celda no está seleccionada
+            if (!row.Selected)
+            {
+                // Alternar colores para filas pares/impares
+                if (e.RowIndex % 2 == 1)
+                {
+                    // Fila impar: oscurecer ligeramente el color base
+                    backColor = Color.FromArgb(
+                        Math.Max(0, backColor.R - 10),
+                        Math.Max(0, backColor.G - 10),
+                        Math.Max(0, backColor.B - 10));
+                }
+
+                e.CellStyle.BackColor = backColor;
+                e.CellStyle.ForeColor = foreColor;
+            }
+        }
+
+        /// <summary>
         /// Carga todas las combinaciones FECHA + HORA de un archivo seleccionado (como el sistema antiguo)
         /// </summary>
         private async Task CargarRegistrosDelArchivoSeleccionadoAsync()
@@ -1481,12 +1556,10 @@ namespace Generador_Pautas
                     txtCodigoEliminar.Text = codigoComercial;
                     lblTotalPautas.Text = $"{tableData.Rows.Count} pautas programadas";
 
-                    // Extraer las fechas y horas únicas directamente de los datos ya cargados
+                    // Extraer las horas únicas de los datos cargados
                     cboHoraElim.Items.Clear();
                     cboHoraElim.Items.Add("(Todas)"); // Opción para eliminar todas las horas
                     var horasUnicas = new SortedSet<string>();
-                    DateTime? fechaMin = null;
-                    DateTime? fechaMax = null;
 
                     Logger.Log($"FORM1 - Panel Elim - Procesando {tableData.Rows.Count} filas para extraer horas");
 
@@ -1498,23 +1571,20 @@ namespace Generador_Pautas
                         {
                             horasUnicas.Add(hora);
                         }
-
-                        // Fechas
-                        DateTime fecha = Convert.ToDateTime(row["Fecha"]);
-                        if (!fechaMin.HasValue || fecha < fechaMin.Value)
-                            fechaMin = fecha;
-                        if (!fechaMax.HasValue || fecha > fechaMax.Value)
-                            fechaMax = fecha;
                     }
 
                     Logger.Log($"FORM1 - Panel Elim - Horas únicas encontradas: {horasUnicas.Count}");
                     Logger.Log($"FORM1 - Panel Elim - Horas: {string.Join(", ", horasUnicas)}");
 
-                    // Actualizar DateTimePicker con las fechas de las pautas
-                    if (fechaMin.HasValue && fechaMax.HasValue)
+                    // Obtener las fechas del comercial directamente de la BD (siempre actualizadas)
+                    var fechasComercial = await _comercialService.ObtenerFechasComercialAsync(codigoComercial, ciudadSeleccionada, radioSeleccionada);
+                    if (fechasComercial.HasValue)
                     {
-                        dtpFechaElimI.Value = fechaMin.Value;
-                        dtpFechaElimF.Value = fechaMax.Value;
+                        // Solo mostrar fechas desde hoy en adelante
+                        DateTime fechaHoy = DateTime.Today;
+                        dtpFechaElimI.Value = fechasComercial.Value.FechaInicio < fechaHoy ? fechaHoy : fechasComercial.Value.FechaInicio;
+                        dtpFechaElimF.Value = fechasComercial.Value.FechaFinal;
+                        Logger.Log($"FORM1 - Panel Elim - Fechas del comercial (BD): {fechasComercial.Value.FechaInicio:dd/MM/yyyy} - {fechasComercial.Value.FechaFinal:dd/MM/yyyy}");
                     }
 
                     foreach (string hora in horasUnicas)
@@ -1563,7 +1633,7 @@ namespace Generador_Pautas
                 if (!string.IsNullOrEmpty(filePath) || !string.IsNullOrEmpty(codigoNumerico))
                 {
                     // Buscar el comercial con este codigo numerico, Ciudad y Radio para obtener sus datos
-                    var datosComercial = await ObtenerDatosComercialAsync(filePath, ciudad, radio, codigoNumerico);
+                    var datosComercial = await _comercialService.ObtenerDatosComercialAsync(filePath, ciudad, radio, codigoNumerico);
 
                     if (datosComercial != null)
                     {
@@ -1575,13 +1645,35 @@ namespace Generador_Pautas
                             pauteoRapidoPanel.CargarComercialParaEdicion(datosComercial);
 
                             // Obtener las tandas asignadas y marcarlas
-                            var tandasAsignadas = await ObtenerTandasAsignadasParaEdicionAsync(datosComercial.Codigo, datosComercial.TipoProgramacion);
+                            var tandasAsignadas = await _comercialService.ObtenerTandasAsignadasAsync(datosComercial.Codigo, datosComercial.TipoProgramacion);
                             pauteoRapidoPanel.MarcarTandasAsignadas(tandasAsignadas);
 
                             // Obtener los días asignados y marcarlos
-                            var diasAsignados = await ObtenerDiasAsignadosParaEdicionAsync(datosComercial.Codigo, datosComercial.FechaInicio, datosComercial.FechaFinal);
+                            var diasAsignados = await _comercialService.ObtenerDiasAsignadosAsync(datosComercial.Codigo, datosComercial.FechaInicio, datosComercial.FechaFinal);
                             pauteoRapidoPanel.MarcarDiasAsignados(diasAsignados);
 
+                            // Sincronizar panel de eliminación con los datos del comercial cargado
+                            // Solo mostrar fechas desde hoy en adelante
+                            DateTime fechaHoyDobleClick = DateTime.Today;
+                            string codigoNumericoParaElim = codigoNumerico;
+                            txtCodigoEliminar.Text = codigoNumericoParaElim;
+                            dtpFechaElimI.Value = datosComercial.FechaInicio < fechaHoyDobleClick ? fechaHoyDobleClick : datosComercial.FechaInicio;
+                            dtpFechaElimF.Value = datosComercial.FechaFinal;
+
+                            // Actualizar las horas disponibles para eliminar
+                            cboHoraElim.Items.Clear();
+                            cboHoraElim.Items.Add("(Todas)");
+                            foreach (var hora in tandasAsignadas.OrderBy(h => h))
+                            {
+                                cboHoraElim.Items.Add(hora);
+                            }
+                            lblConteoHoras.Text = $"({tandasAsignadas.Count} horarios)";
+
+                            // Actualizar total de pautas desde dgv_pautas si tiene datos
+                            int totalPautas = dgv_pautas.Rows.Count;
+                            lblTotalPautas.Text = $"{totalPautas} pautas programadas";
+
+                            Logger.Log($"FORM1 - DOBLE CLICK - Panel Elim sincronizado: Codigo={codigoNumericoParaElim}, Fechas={datosComercial.FechaInicio:dd/MM/yyyy}-{datosComercial.FechaFinal:dd/MM/yyyy}, Pautas={totalPautas}");
                             System.Diagnostics.Debug.WriteLine($"[FORM1] Comercial cargado en Pauteo Rápido: {datosComercial.Codigo}");
                         }
                     }
@@ -1599,336 +1691,6 @@ namespace Generador_Pautas
             }
         }
 
-        /// <summary>
-        /// Obtiene las tandas asignadas para un comercial y las convierte a formato de hora
-        /// </summary>
-        private async Task<List<string>> ObtenerTandasAsignadasParaEdicionAsync(string codigo, string tipoProgramacion)
-        {
-            try
-            {
-                System.Diagnostics.Debug.WriteLine($"[FORM1] ObtenerTandasAsignadasParaEdicionAsync - Código: {codigo}, TipoProgramacion: {tipoProgramacion}");
-
-                // Determinar el tipo de tanda
-                TipoTanda tipo = TipoTanda.Tandas_00_30;
-                if (!string.IsNullOrEmpty(tipoProgramacion))
-                {
-                    if (tipoProgramacion.Contains("10-40")) tipo = TipoTanda.Tandas_10_40;
-                    else if (tipoProgramacion.Contains("15-45")) tipo = TipoTanda.Tandas_15_45;
-                    else if (tipoProgramacion.Contains("20-50")) tipo = TipoTanda.Tandas_20_50;
-                    else if (tipoProgramacion.Contains("00-20-30-50")) tipo = TipoTanda.Tandas_00_20_30_50;
-                }
-
-                System.Diagnostics.Debug.WriteLine($"[FORM1] Tipo de tanda detectado: {tipo}");
-
-                var tandasHoras = new List<string>();
-
-                // Para comerciales importados de Access (ACC-XXX-...-HHMM), las horas están en el código
-                if (codigo.StartsWith("ACC-", StringComparison.OrdinalIgnoreCase))
-                {
-                    System.Diagnostics.Debug.WriteLine($"[FORM1] Detectado comercial Access, buscando horas en códigos...");
-
-                    // Extraer la parte numérica del código
-                    string codigoNumerico = "";
-                    var partes = codigo.Split('-');
-                    if (partes.Length >= 2 && int.TryParse(partes[1], out _))
-                    {
-                        codigoNumerico = partes[1];
-                    }
-
-                    // Buscar todos los códigos con el mismo número para extraer las horas
-                    using (var conn = new Npgsql.NpgsqlConnection(DatabaseConfig.ConnectionString))
-                    {
-                        await conn.OpenAsync();
-
-                        string query = @"SELECT DISTINCT Codigo
-                                         FROM Comerciales
-                                         WHERE split_part(Codigo, '-', 2) = @CodigoNumerico
-                                         ORDER BY Codigo";
-
-                        using (var cmd = new Npgsql.NpgsqlCommand(query, conn))
-                        {
-                            cmd.Parameters.AddWithValue("@CodigoNumerico", codigoNumerico);
-
-                            using (var reader = await cmd.ExecuteReaderAsync())
-                            {
-                                while (await reader.ReadAsync())
-                                {
-                                    string codigoCompleto = reader.GetString(0);
-                                    // Extraer hora del último segmento (ej: ACC-957-ABA-EXI-0015 -> 0015 -> 00:15)
-                                    var partesCompleto = codigoCompleto.Split('-');
-                                    if (partesCompleto.Length >= 5)
-                                    {
-                                        string horaStr = partesCompleto[partesCompleto.Length - 1];
-                                        if (horaStr.Length == 4 && int.TryParse(horaStr, out _))
-                                        {
-                                            string hora = $"{horaStr.Substring(0, 2)}:{horaStr.Substring(2, 2)}";
-                                            if (!tandasHoras.Contains(hora))
-                                            {
-                                                tandasHoras.Add(hora);
-                                                System.Diagnostics.Debug.WriteLine($"[FORM1] Código {codigoCompleto} -> Hora {hora}");
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // Para comerciales nuevos (CU-XXX o solo número), buscar en ComercialesAsignados
-                    var filasAsignadas = await DataAccess.ObtenerTandasAsignadasAsync(
-                        DatabaseConfig.ConnectionString, codigo);
-
-                    System.Diagnostics.Debug.WriteLine($"[FORM1] Filas asignadas obtenidas: {filasAsignadas.Count} - Valores: {string.Join(", ", filasAsignadas.Take(10))}");
-
-                    // Convertir los índices de fila a horas
-                    var horarios = TandasHorarias.GetHorarios(tipo);
-
-                    System.Diagnostics.Debug.WriteLine($"[FORM1] Horarios disponibles: {horarios.Length}");
-
-                    foreach (var filaStr in filasAsignadas)
-                    {
-                        if (int.TryParse(filaStr, out int fila) && fila >= 0 && fila < horarios.Length)
-                        {
-                            string hora = horarios[fila];
-                            if (!tandasHoras.Contains(hora))
-                            {
-                                tandasHoras.Add(hora);
-                                System.Diagnostics.Debug.WriteLine($"[FORM1] Fila {fila} -> Hora {hora}");
-                            }
-                        }
-                        else
-                        {
-                            System.Diagnostics.Debug.WriteLine($"[FORM1] Fila inválida: {filaStr} (max: {horarios.Length - 1})");
-                        }
-                    }
-                }
-
-                System.Diagnostics.Debug.WriteLine($"[FORM1] Tandas horas resultado: {tandasHoras.Count} - {string.Join(", ", tandasHoras.Take(10))}");
-
-                return tandasHoras;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[FORM1] Error obteniendo tandas asignadas: {ex.Message}");
-                return new List<string>();
-            }
-        }
-
-        /// <summary>
-        /// Obtiene los días de la semana que tienen pautas asignadas para un comercial
-        /// </summary>
-        private async Task<List<DayOfWeek>> ObtenerDiasAsignadosParaEdicionAsync(string codigo, DateTime fechaInicio, DateTime fechaFinal)
-        {
-            try
-            {
-                System.Diagnostics.Debug.WriteLine($"[FORM1] ObtenerDiasAsignadosParaEdicionAsync - Código: {codigo}");
-
-                var diasUnicos = new HashSet<DayOfWeek>();
-
-                // Para comerciales ACC, los días se determinan por el rango de fechas
-                // ya que no hay registros individuales en ComercialesAsignados con fecha
-                if (codigo.StartsWith("ACC-", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Para comerciales importados de Access, asumimos todos los días del rango
-                    // ya que no tienen información específica de días
-                    for (DateTime fecha = fechaInicio; fecha <= fechaFinal; fecha = fecha.AddDays(1))
-                    {
-                        diasUnicos.Add(fecha.DayOfWeek);
-                        // Si ya tenemos todos los días, salir
-                        if (diasUnicos.Count == 7) break;
-                    }
-
-                    System.Diagnostics.Debug.WriteLine($"[FORM1] Días ACC (rango completo): {string.Join(", ", diasUnicos)}");
-                }
-                else
-                {
-                    // Para comerciales nuevos, buscar las fechas en ComercialesAsignados
-                    using (var conn = new Npgsql.NpgsqlConnection(DatabaseConfig.ConnectionString))
-                    {
-                        await conn.OpenAsync();
-
-                        // Extraer código numérico si es necesario
-                        string codigoNumerico = codigo;
-                        if (codigo.Contains("-"))
-                        {
-                            var partes = codigo.Split('-');
-                            if (partes.Length >= 2 && int.TryParse(partes[1], out _))
-                            {
-                                codigoNumerico = partes[1];
-                            }
-                        }
-
-                        string query = @"
-                            SELECT DISTINCT Fecha
-                            FROM ComercialesAsignados
-                            WHERE Codigo = @Codigo
-                               OR Codigo = @CodigoNumerico
-                               OR split_part(Codigo, '-', 2) = @CodigoNumerico
-                            ORDER BY Fecha";
-
-                        using (var cmd = new Npgsql.NpgsqlCommand(query, conn))
-                        {
-                            cmd.Parameters.AddWithValue("@Codigo", codigo);
-                            cmd.Parameters.AddWithValue("@CodigoNumerico", codigoNumerico);
-
-                            using (var reader = await cmd.ExecuteReaderAsync())
-                            {
-                                while (await reader.ReadAsync())
-                                {
-                                    if (!reader.IsDBNull(0))
-                                    {
-                                        DateTime fecha = reader.GetDateTime(0);
-                                        diasUnicos.Add(fecha.DayOfWeek);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    System.Diagnostics.Debug.WriteLine($"[FORM1] Días desde ComercialesAsignados: {string.Join(", ", diasUnicos)}");
-                }
-
-                var resultado = diasUnicos.ToList();
-                System.Diagnostics.Debug.WriteLine($"[FORM1] Días resultado: {resultado.Count} - {string.Join(", ", resultado)}");
-
-                return resultado;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[FORM1] Error obteniendo días asignados: {ex.Message}");
-                return new List<DayOfWeek>();
-            }
-        }
-
-        /// <summary>
-        /// Obtiene los datos de un comercial desde la BD basandose en FilePath, Ciudad, Radio y codigo numerico
-        /// Busca primero en Comerciales (tabla principal) y si no encuentra, busca en ComercialesAsignados
-        /// </summary>
-        private async Task<AgregarComercialesData> ObtenerDatosComercialAsync(string filePath, string ciudad, string radio, string codigoNumerico = null)
-        {
-            try
-            {
-                using (var conn = new Npgsql.NpgsqlConnection(DatabaseConfig.ConnectionString))
-                {
-                    await conn.OpenAsync();
-
-                    // Primero buscar en la tabla Comerciales (comerciales con codigo ACC-)
-                    if (!string.IsNullOrEmpty(codigoNumerico))
-                    {
-                        string queryComerciales = @"SELECT Codigo, FilePath, FechaInicio, FechaFinal, Ciudad, Radio, Posicion, Estado, TipoProgramacion
-                                FROM Comerciales
-                                WHERE split_part(Codigo, '-', 2) = @CodigoNumerico
-                                  AND Ciudad = @Ciudad
-                                  AND Radio = @Radio
-                                ORDER BY Codigo
-                                LIMIT 1";
-
-                        using (var cmd = new Npgsql.NpgsqlCommand(queryComerciales, conn))
-                        {
-                            cmd.Parameters.AddWithValue("@CodigoNumerico", codigoNumerico);
-                            cmd.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
-                            cmd.Parameters.AddWithValue("@Radio", radio ?? "");
-
-                            using (var reader = await cmd.ExecuteReaderAsync())
-                            {
-                                if (await reader.ReadAsync())
-                                {
-                                    return new AgregarComercialesData
-                                    {
-                                        Codigo = reader["Codigo"].ToString(),
-                                        FilePath = reader["FilePath"].ToString(),
-                                        FechaInicio = Convert.ToDateTime(reader["FechaInicio"]),
-                                        FechaFinal = Convert.ToDateTime(reader["FechaFinal"]),
-                                        Ciudad = reader["Ciudad"].ToString(),
-                                        Radio = reader["Radio"].ToString(),
-                                        Posicion = reader["Posicion"].ToString(),
-                                        Estado = reader["Estado"].ToString(),
-                                        TipoProgramacion = reader["TipoProgramacion"]?.ToString() ?? "Cada 00-30 (48 tandas)"
-                                    };
-                                }
-                            }
-                        }
-                    }
-
-                    // Si no encontramos en Comerciales, buscar en ComercialesAsignados (comerciales importados)
-                    // ComercialesAsignados solo tiene: Fila, Columna, ComercialAsignado, Codigo, Fecha
-                    // Ciudad/Radio/TipoProgramacion vienen de la tabla Comerciales (si existe) o usamos los parámetros
-                    if (!string.IsNullOrEmpty(filePath))
-                    {
-                        string nombreArchivo = System.IO.Path.GetFileName(filePath);
-                        string nombreSinExtension = System.IO.Path.GetFileNameWithoutExtension(filePath);
-
-                        System.Diagnostics.Debug.WriteLine($"[ObtenerDatos] Buscando en ComercialesAsignados:");
-                        System.Diagnostics.Debug.WriteLine($"[ObtenerDatos]   FilePath: {filePath}");
-                        System.Diagnostics.Debug.WriteLine($"[ObtenerDatos]   NombreArchivo: {nombreArchivo}");
-                        System.Diagnostics.Debug.WriteLine($"[ObtenerDatos]   NombreSinExt: {nombreSinExtension}");
-
-                        // Buscar en ComercialesAsignados y hacer JOIN con Comerciales para obtener Ciudad/Radio
-                        // Si no hay JOIN, usar los parámetros recibidos
-                        string queryAsignados = @"SELECT DISTINCT
-                                ca.Codigo,
-                                ca.ComercialAsignado as FilePath,
-                                MIN(ca.Fecha) as FechaInicio,
-                                MAX(ca.Fecha) as FechaFinal,
-                                COALESCE(c.Ciudad, @Ciudad) as Ciudad,
-                                COALESCE(c.Radio, @Radio) as Radio,
-                                COALESCE(c.Posicion, '1') as Posicion,
-                                COALESCE(c.Estado, 'Activo') as Estado,
-                                COALESCE(c.TipoProgramacion, 'Cada 15-45') as TipoProgramacion
-                            FROM ComercialesAsignados ca
-                            LEFT JOIN Comerciales c ON ca.Codigo = c.Codigo
-                            WHERE (LOWER(ca.ComercialAsignado) = LOWER(@FilePath)
-                                   OR LOWER(ca.ComercialAsignado) = LOWER(@NombreArchivo)
-                                   OR LOWER(ca.ComercialAsignado) = LOWER(@NombreSinExt)
-                                   OR LOWER(ca.ComercialAsignado) LIKE '%' || LOWER(@NombreArchivo)
-                                   OR LOWER(ca.ComercialAsignado) LIKE '%' || LOWER(@NombreSinExt))
-                            GROUP BY ca.Codigo, ca.ComercialAsignado, c.Ciudad, c.Radio, c.Posicion, c.Estado, c.TipoProgramacion
-                            LIMIT 1";
-
-                        using (var cmd = new Npgsql.NpgsqlCommand(queryAsignados, conn))
-                        {
-                            cmd.Parameters.AddWithValue("@FilePath", filePath);
-                            cmd.Parameters.AddWithValue("@NombreArchivo", nombreArchivo);
-                            cmd.Parameters.AddWithValue("@NombreSinExt", nombreSinExtension);
-                            cmd.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
-                            cmd.Parameters.AddWithValue("@Radio", radio ?? "");
-
-                            using (var reader = await cmd.ExecuteReaderAsync())
-                            {
-                                if (await reader.ReadAsync())
-                                {
-                                    System.Diagnostics.Debug.WriteLine($"[ObtenerDatos] ENCONTRADO en ComercialesAsignados: Codigo={reader["Codigo"]}");
-                                    return new AgregarComercialesData
-                                    {
-                                        Codigo = reader["Codigo"].ToString(),
-                                        FilePath = reader["FilePath"].ToString(),
-                                        FechaInicio = Convert.ToDateTime(reader["FechaInicio"]),
-                                        FechaFinal = Convert.ToDateTime(reader["FechaFinal"]),
-                                        Ciudad = reader["Ciudad"].ToString(),
-                                        Radio = reader["Radio"].ToString(),
-                                        Posicion = reader["Posicion"].ToString(),
-                                        Estado = reader["Estado"].ToString(),
-                                        TipoProgramacion = reader["TipoProgramacion"]?.ToString() ?? "Cada 15-45"
-                                    };
-                                }
-                                else
-                                {
-                                    System.Diagnostics.Debug.WriteLine($"[ObtenerDatos] NO encontrado en ComercialesAsignados");
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error al obtener datos del comercial: {ex.Message}");
-            }
-
-            return null;
-        }
         private async void Form1_Shown(object sender, EventArgs e)
         {
             // Marcar que estamos inicializando para evitar cargas dobles
@@ -2112,6 +1874,9 @@ namespace Generador_Pautas
             {
                 System.Diagnostics.Debug.WriteLine($"Error al cargar ciudades: {ex.Message}");
             }
+
+            // Quitar selección por defecto
+            dgv_ciudades.ClearSelection();
         }
 
         private async Task CargarEstacionesAsync()
@@ -2119,7 +1884,7 @@ namespace Generador_Pautas
             dgv_estaciones.Rows.Clear();
 
             // Solo mostrar estas estaciones específicas
-            string[] estacionesPermitidas = { "EXITOSA", "KARIBEÑA", "LA KALLE", "LAKALLE" };
+            string[] estacionesPermitidas = { "EXITOSA", "KARIBEÑA", "LA KALLE", "LAKALLE", "LA HOT", "LAHOT", "RADIO Z", "RADIOZ" };
 
             try
             {
@@ -2145,6 +1910,9 @@ namespace Generador_Pautas
                     dgv_estaciones.Rows.Add(estacion);
                 }
             }
+
+            // Quitar selección por defecto
+            dgv_estaciones.ClearSelection();
         }
 
         private async Task CargarDBAsync(string tableName = null)
@@ -2295,25 +2063,156 @@ namespace Generador_Pautas
             songPaths.Add(filePath);
         }
 
+        // Token para cancelar carga de metadatos cuando se cambia de carpeta
+        private CancellationTokenSource _cargaMetadatosToken;
+
         /// <summary>
         /// Manejador del evento que carga automaticamente todos los archivos de audio
         /// cuando el usuario entra a una carpeta en el explorador
         /// </summary>
-        private void FileExplorerPanel_AudioFilesLoaded(object sender, List<string> audioFilePaths)
+        private async void FileExplorerPanel_AudioFilesLoaded(object sender, List<string> audioFilePaths)
         {
+            // Cancelar carga anterior si existe
+            _cargaMetadatosToken?.Cancel();
+            _cargaMetadatosToken = new CancellationTokenSource();
+            var token = _cargaMetadatosToken.Token;
+
             // Limpiar la lista actual de archivos
             dgv_archivos.Rows.Clear();
             songPaths.Clear();
             index = 1;
 
-            // Cargar todos los archivos de audio de la carpeta
-            foreach (string filePath in audioFilePaths)
+            int totalArchivos = audioFilePaths.Count;
+
+            // PASO 1: Cargar TODOS los nombres inmediatamente (sin metadatos)
+            CargarNombresRapido(audioFilePaths);
+            fileExplorerPanel.MostrarProgresoCarga(totalArchivos, totalArchivos);
+
+            // PASO 2: Cargar metadatos en segundo plano (solo si hay menos de 500 archivos)
+            if (totalArchivos <= 500 && totalArchivos > 0)
             {
-                string songName = GetSongName(filePath);
-                TimeSpan time = BassPlayer.GetAudioDuration(filePath);
-                AddSongToDataGridView(songName, filePath, time);
-                songPaths.Add(filePath);
+                await CargarMetadatosEnSegundoPlano(token);
             }
+        }
+
+        /// <summary>
+        /// Carga solo los nombres de archivos (instantáneo)
+        /// </summary>
+        private void CargarNombresRapido(List<string> audioFilePaths)
+        {
+            dgv_archivos.SuspendLayout();
+            try
+            {
+                foreach (string filePath in audioFilePaths)
+                {
+                    string songName = GetSongName(filePath);
+                    dgv_archivos.Rows.Add(songName, "", ""); // Sin duración ni bitrate inicialmente
+                    songPaths.Add(filePath);
+                    index++;
+                }
+            }
+            finally
+            {
+                dgv_archivos.ResumeLayout();
+            }
+        }
+
+        /// <summary>
+        /// Carga metadatos (duración y bitrate) en segundo plano
+        /// </summary>
+        private async Task CargarMetadatosEnSegundoPlano(CancellationToken token)
+        {
+            int totalArchivos = songPaths.Count;
+            int batchSize = 20; // Procesar en lotes pequeños para no bloquear UI
+
+            for (int i = 0; i < totalArchivos; i += batchSize)
+            {
+                if (token.IsCancellationRequested) return;
+
+                int fin = Math.Min(i + batchSize, totalArchivos);
+
+                // Procesar lote en segundo plano
+                var metadatos = await Task.Run(() =>
+                {
+                    var resultado = new List<(int index, string duracion, string bitrate)>();
+
+                    for (int j = i; j < fin; j++)
+                    {
+                        if (token.IsCancellationRequested) break;
+
+                        string filePath = songPaths[j];
+                        string duracion = "";
+                        string bitrate = "";
+
+                        int stream = Bass.BASS_StreamCreateFile(filePath, 0, 0, BASSFlag.BASS_STREAM_DECODE);
+                        if (stream != 0)
+                        {
+                            long length = Bass.BASS_ChannelGetLength(stream);
+                            double seconds = Bass.BASS_ChannelBytes2Seconds(stream, length);
+                            if (seconds > 0)
+                            {
+                                TimeSpan time = TimeSpan.FromSeconds(seconds);
+                                duracion = time.ToString(SongTimeFormat);
+                            }
+
+                            float br = 0;
+                            Bass.BASS_ChannelGetAttribute(stream, BASSAttribute.BASS_ATTRIB_BITRATE, ref br);
+                            if (br > 0)
+                                bitrate = $"{(int)Math.Round(br)}";
+
+                            Bass.BASS_StreamFree(stream);
+                        }
+
+                        resultado.Add((j, duracion, bitrate));
+                    }
+
+                    return resultado;
+                }, token);
+
+                if (token.IsCancellationRequested) return;
+
+                // Actualizar UI con los metadatos
+                foreach (var (idx, duracion, bitrate) in metadatos)
+                {
+                    if (idx < dgv_archivos.Rows.Count)
+                    {
+                        dgv_archivos.Rows[idx].Cells[1].Value = duracion;
+                        dgv_archivos.Rows[idx].Cells[2].Value = bitrate;
+                    }
+                }
+
+                // Pequeña pausa para no saturar la UI
+                await Task.Delay(5, token);
+            }
+        }
+
+        /// <summary>
+        /// Obtiene los datos de un archivo de audio (duración y bitrate)
+        /// </summary>
+        private object[] ObtenerDatosArchivo(string filePath, int idx)
+        {
+            string songName = GetSongName(filePath);
+            TimeSpan time = TimeSpan.Zero;
+            int roundedBitrate = 0;
+
+            int stream = Bass.BASS_StreamCreateFile(filePath, 0, 0, BASSFlag.BASS_STREAM_DECODE);
+            if (stream != 0)
+            {
+                // Obtener duración
+                long length = Bass.BASS_ChannelGetLength(stream);
+                double seconds = Bass.BASS_ChannelBytes2Seconds(stream, length);
+                if (seconds > 0)
+                    time = TimeSpan.FromSeconds(seconds);
+
+                // Obtener bitrate
+                float bitrate = 0;
+                Bass.BASS_ChannelGetAttribute(stream, BASSAttribute.BASS_ATTRIB_BITRATE, ref bitrate);
+                roundedBitrate = (int)Math.Round(bitrate);
+
+                Bass.BASS_StreamFree(stream);
+            }
+
+            return new object[] { songName, time.ToString(SongTimeFormat), roundedBitrate > 0 ? $"{roundedBitrate}" : "" };
         }
 
         /// <summary>
@@ -2321,33 +2220,43 @@ namespace Generador_Pautas
         /// </summary>
         private void FileExplorerPanel_SearchTextChanged(object sender, string searchTerm)
         {
-            if (string.IsNullOrEmpty(searchTerm))
+            // Suspender layout para mejor rendimiento
+            dgv_archivos.SuspendLayout();
+            try
             {
-                // Mostrar todos los archivos
-                foreach (DataGridViewRow row in dgv_archivos.Rows)
+                if (string.IsNullOrEmpty(searchTerm))
                 {
-                    row.Visible = true;
+                    // Mostrar todos los archivos
+                    foreach (DataGridViewRow row in dgv_archivos.Rows)
+                    {
+                        row.Visible = true;
+                    }
+                    fileExplorerPanel.ActualizarEstadoBusqueda(dgv_archivos.Rows.Count, dgv_archivos.Rows.Count);
                 }
-                fileExplorerPanel.ActualizarEstadoBusqueda(dgv_archivos.Rows.Count, dgv_archivos.Rows.Count);
+                else
+                {
+                    // Filtrar por nombre (columna 0 = Nombre)
+                    int visibles = 0;
+                    int total = dgv_archivos.Rows.Count;
+                    string searchTermUpper = searchTerm.ToUpperInvariant();
+
+                    foreach (DataGridViewRow row in dgv_archivos.Rows)
+                    {
+                        if (row.IsNewRow) continue;
+
+                        string nombre = row.Cells[0].Value?.ToString() ?? "";
+                        bool coincide = nombre.ToUpperInvariant().Contains(searchTermUpper);
+                        row.Visible = coincide;
+
+                        if (coincide) visibles++;
+                    }
+
+                    fileExplorerPanel.ActualizarEstadoBusqueda(visibles, total);
+                }
             }
-            else
+            finally
             {
-                // Filtrar por nombre
-                int visibles = 0;
-                int total = dgv_archivos.Rows.Count;
-
-                foreach (DataGridViewRow row in dgv_archivos.Rows)
-                {
-                    if (row.IsNewRow) continue;
-
-                    string nombre = row.Cells[1].Value?.ToString() ?? "";
-                    bool coincide = nombre.IndexOf(searchTerm, StringComparison.OrdinalIgnoreCase) >= 0;
-                    row.Visible = coincide;
-
-                    if (coincide) visibles++;
-                }
-
-                fileExplorerPanel.ActualizarEstadoBusqueda(visibles, total);
+                dgv_archivos.ResumeLayout();
             }
         }
 
@@ -2363,7 +2272,7 @@ namespace Generador_Pautas
 
             int roundedBitrate = (int)Math.Round(bitrate);
 
-            dgv_archivos.Rows.Add(index, songName, time.ToString(SongTimeFormat), "", $"{roundedBitrate} kbps");
+            dgv_archivos.Rows.Add(songName, time.ToString(SongTimeFormat), roundedBitrate > 0 ? $"{roundedBitrate}" : "");
             index++;
 
             // If there's a new row at the end, remove it
@@ -2613,8 +2522,8 @@ namespace Generador_Pautas
             dgv_base.AlternatingRowsDefaultCellStyle = altRowStyleBase;
             dgv_base.BackgroundColor = Color.FromArgb(240, 240, 240);
             dgv_base.GridColor = Color.FromArgb(200, 200, 200);
-            dgv_base.RowTemplate.Height = 22; // Filas más compactas
-            dgv_base.ColumnHeadersHeight = 28; // Encabezado más compacto
+            dgv_base.RowTemplate.Height = 20; // Filas más compactas
+            dgv_base.ColumnHeadersHeight = 24; // Encabezado más compacto
 
             // Columna Archivo alineada a la izquierda (aplicar despues de estilos globales)
             if (dgv_base.Columns.Contains("NombreArchivo"))
@@ -2775,12 +2684,6 @@ namespace Generador_Pautas
 
                 // Eliminar la fila del DataGridView
                 dgv_archivos.Rows.RemoveAt(selectedIndex);
-
-                // Actualizar los números de fila
-                for (int i = 0; i < dgv_archivos.Rows.Count; i++)
-                {
-                    dgv_archivos.Rows[i].Cells[0].Value = i + 1;
-                }
                 index = dgv_archivos.Rows.Count + 1;
             }
         }
@@ -3150,7 +3053,6 @@ namespace Generador_Pautas
                         row["FilePath"].ToString(),
                         row["CodigoNumerico"].ToString(),
                         row["NombreArchivo"].ToString(),
-                        row["TotalRegistros"].ToString(),
                         row["Ciudad"].ToString(),
                         row["Radio"].ToString(),
                         Convert.ToDateTime(row["FechaMinima"]).ToString("dd/MM/yyyy"),
@@ -3229,6 +3131,7 @@ namespace Generador_Pautas
             pauteoRapidoPanel = new PauteoRapidoPanel();
             pauteoRapidoPanel.PautaGenerada += PauteoRapido_PautaGenerada;
             pauteoRapidoPanel.TandaClicked += PauteoRapido_TandaClicked;
+            pauteoRapidoPanel.FechasModificadas += PauteoRapido_FechasModificadas;
 
             // Crear contenedor para dgv_pautas y panel de eliminacion (van a la derecha)
             var pnlPautasContainer = new Panel
@@ -3333,7 +3236,7 @@ namespace Generador_Pautas
             // Cambiar pnlBottomRight a Dock.Top para el Pauteo Rapido
             pnlBottomRight.Controls.Clear();
             pnlBottomRight.Dock = DockStyle.Top;
-            pnlBottomRight.Height = 380; // Altura para el pauteo rapido (reducido para dar mas espacio a dgv_base)
+            pnlBottomRight.Height = 550; // Altura aumentada para mostrar todas las 48 horas
             pauteoRapidoPanel.Panel.Dock = DockStyle.Fill;
             pnlBottomRight.Controls.Add(pauteoRapidoPanel.Panel);
 
@@ -3374,6 +3277,20 @@ namespace Generador_Pautas
                 await CargarDatosAgrupadosAsync(true);
 
                 System.Diagnostics.Debug.WriteLine($"[PAUTEO RAPIDO] Pauta generada exitosamente: {Path.GetFileName(e.AudioPath)}");
+            }
+        }
+
+        /// <summary>
+        /// Sincroniza las fechas del panel de eliminación con las del panel de Pauteo Rápido
+        /// </summary>
+        private void PauteoRapido_FechasModificadas(object sender, EventArgs e)
+        {
+            if (pauteoRapidoPanel != null && pauteoRapidoPanel.EstaModoEdicion)
+            {
+                // Sincronizar fechas del panel de eliminación con las del panel de Pauteo Rápido
+                dtpFechaElimI.Value = pauteoRapidoPanel.FechaInicioActual;
+                dtpFechaElimF.Value = pauteoRapidoPanel.FechaFinalActual;
+                Logger.Log($"FORM1 - Panel Elim - Fechas sincronizadas con Pauteo Rápido: {pauteoRapidoPanel.FechaInicioActual:dd/MM/yyyy} - {pauteoRapidoPanel.FechaFinalActual:dd/MM/yyyy}");
             }
         }
 
@@ -3468,13 +3385,50 @@ namespace Generador_Pautas
         /// <summary>
         /// Envía un audio al panel de Pauteo Rápido manteniendo la configuración actual
         /// Solo cambia el audio y avanza la posición automáticamente
+        /// Si se estaba en modo edición, limpia también el panel de pautas
         /// </summary>
         private void EnviarAudioAPauteoRapidoManteniendo(string audioPath)
         {
             if (pauteoRapidoPanel != null)
             {
+                // Verificar si estamos saliendo de modo edición para limpiar el panel de pautas
+                bool estabaEnModoEdicion = pauteoRapidoPanel.EstaModoEdicion;
+
                 pauteoRapidoPanel.SetAudioManteniendo(audioPath);
+
+                // Si estábamos en modo edición, limpiar el panel de pautas de la derecha
+                if (estabaEnModoEdicion)
+                {
+                    LimpiarPanelPautasParaNuevoPauteo();
+                }
             }
+        }
+
+        /// <summary>
+        /// Limpia el panel de pautas para comenzar un nuevo pauteo
+        /// Se usa cuando se sale del modo edición al seleccionar un nuevo archivo
+        /// </summary>
+        private void LimpiarPanelPautasParaNuevoPauteo()
+        {
+            // Limpiar dgv_pautas
+            dgv_pautas.DataSource = null;
+            dgv_pautas.Rows.Clear();
+            dgv_pautas.Columns.Clear();
+
+            // Limpiar título
+            lblPautasTitulo.Text = "Seleccione un archivo para ver sus pauteos";
+
+            // Limpiar panel de eliminación
+            txtCodigoEliminar.Text = "";
+            lblTotalPautas.Text = "0 pautas programadas";
+            lblConteoHoras.Text = "(0 horarios)";
+            cboHoraElim.Items.Clear();
+            cboHoraElim.Items.Add("(Todas)");
+            cboHoraElim.SelectedIndex = 0;
+
+            // Resetear fechas a valores por defecto
+            dtpFechaElimI.Value = DateTime.Today;
+            dtpFechaElimF.Value = DateTime.Today.AddMonths(1);
         }
 
         // =============================================
@@ -3802,16 +3756,23 @@ namespace Generador_Pautas
                     }
                 }
 
-                // Actualizar el grid de pautas y los DateTimePicker
+                // Recargar el grid principal (dgv_base) para actualizar conteos y fechas
+                await CargarDatosAgrupadosAsync(true);
+
+                // Re-seleccionar el comercial por código después de recargar el grid
+                SeleccionarComercialPorCodigo(codigoBuscar, ciudad, radio);
+
+                // Actualizar el grid de pautas usando el método principal
                 if (dgv_base.SelectedRows.Count > 0)
                 {
-                    string codigoSeleccionado = dgv_base.SelectedRows[0].Cells["Codigo"]?.Value?.ToString();
-                    if (!string.IsNullOrEmpty(codigoSeleccionado))
-                    {
-                        await CargarPautasDelComercialAsync(codigoSeleccionado);
+                    await CargarRegistrosDelArchivoSeleccionadoAsync();
 
-                        // Actualizar los DateTimePicker y la tabla Comerciales con las nuevas fechas
-                        await ActualizarFechasDelComercialAsync(codigoSeleccionado);
+                    // Actualizar el panel de Pauteo Rápido si está en modo edición
+                    if (pauteoRapidoPanel != null && pauteoRapidoPanel.EstaModoEdicion)
+                    {
+                        // Recargar las tandas asignadas en el panel de pauteo rápido
+                        var tandasAsignadas = await _comercialService.ObtenerTandasAsignadasAsync(codigoBuscar, null);
+                        pauteoRapidoPanel.MarcarTandasAsignadas(tandasAsignadas);
                     }
                 }
 
@@ -3824,6 +3785,7 @@ namespace Generador_Pautas
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al eliminar pautas: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Diagnostics.Debug.WriteLine($"[ERROR] btnEliminarPorFechas_Click: {ex.Message}");
             }
         }
 
@@ -3880,12 +3842,20 @@ namespace Generador_Pautas
 
             try
             {
+                System.Diagnostics.Debug.WriteLine($"[ELIMINAR] ========================================");
+                System.Diagnostics.Debug.WriteLine($"[ELIMINAR] Codigo: {codigoBuscar}");
+                System.Diagnostics.Debug.WriteLine($"[ELIMINAR] Hora seleccionada: {horaSeleccionada}");
+                System.Diagnostics.Debug.WriteLine($"[ELIMINAR] Eliminar todas horas: {eliminarTodasHoras}");
+                System.Diagnostics.Debug.WriteLine($"[ELIMINAR] Fechas: {fechaInicio:dd/MM/yyyy} - {fechaFin:dd/MM/yyyy}");
+                System.Diagnostics.Debug.WriteLine($"[ELIMINAR] Ciudad: {ciudad}, Radio: {radio}");
+
                 var dbService = new DatabaseService();
                 int eliminados = 0;
 
                 if (eliminarTodasHoras)
                 {
                     // Si es "Todas las horas", usar el método de eliminar por fechas
+                    System.Diagnostics.Debug.WriteLine($"[ELIMINAR] Llamando EliminarPorCodigoYFechas...");
                     eliminados = await dbService.EliminarComercialesAsignadosPorCodigoYFechasAsync(
                         codigoBuscar, fechaInicio, fechaFin, ciudad, radio);
                 }
@@ -3893,14 +3863,22 @@ namespace Generador_Pautas
                 {
                     // Calcular el indice de fila para la hora seleccionada
                     int fila = CalcularFilaParaHora(horaSeleccionada);
+                    System.Diagnostics.Debug.WriteLine($"[ELIMINAR] Hora '{horaSeleccionada}' -> Fila calculada: {fila}");
 
                     if (fila >= 0)
                     {
                         // Nuevo método que combina hora + rango de fechas
+                        System.Diagnostics.Debug.WriteLine($"[ELIMINAR] Llamando EliminarPorCodigoHoraYFechas con fila={fila}...");
                         eliminados = await dbService.EliminarComercialesAsignadosPorCodigoHoraYFechasAsync(
                             codigoBuscar, fila, fechaInicio, fechaFin, ciudad, radio);
                     }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[ELIMINAR] ERROR: No se pudo calcular la fila para la hora '{horaSeleccionada}'");
+                    }
                 }
+
+                System.Diagnostics.Debug.WriteLine($"[ELIMINAR] Resultado: {eliminados} registros eliminados");
 
                 // Regenerar archivos TXT para las fechas eliminadas
                 if (eliminados > 0 && !string.IsNullOrEmpty(ciudad) && !string.IsNullOrEmpty(radio))
@@ -3927,23 +3905,83 @@ namespace Generador_Pautas
                 MessageBox.Show($"Se eliminaron {eliminados} registros de pautas y se actualizaron los archivos.",
                     "Eliminacion Completada", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                // Actualizar el grid de pautas
+                // Recargar el grid principal (dgv_base) para actualizar conteos y fechas
+                await CargarDatosAgrupadosAsync(true);
+
+                // Re-seleccionar el comercial por código después de recargar el grid
+                SeleccionarComercialPorCodigo(codigoBuscar, ciudad, radio);
+
+                // Actualizar el grid de pautas usando el método principal que carga todo
                 if (dgv_base.SelectedRows.Count > 0)
                 {
-                    string codigoSeleccionado = dgv_base.SelectedRows[0].Cells["Codigo"]?.Value?.ToString();
-                    if (!string.IsNullOrEmpty(codigoSeleccionado))
+                    await CargarRegistrosDelArchivoSeleccionadoAsync();
+
+                    // Actualizar el panel de Pauteo Rápido si está en modo edición
+                    if (pauteoRapidoPanel != null && pauteoRapidoPanel.EstaModoEdicion)
                     {
-                        await CargarPautasDelComercialAsync(codigoSeleccionado);
+                        // Recargar las tandas asignadas en el panel de pauteo rápido
+                        var tandasAsignadas = await _comercialService.ObtenerTandasAsignadasAsync(codigoBuscar, null);
+                        pauteoRapidoPanel.MarcarTandasAsignadas(tandasAsignadas);
                     }
                 }
+
+                // Notificar cambio en BD para que otros formularios se actualicen
+                ConfigManager.NotificarCambioEnBD();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al eliminar pautas: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                System.Diagnostics.Debug.WriteLine($"[ERROR] btnEliminarPorHora_Click: {ex.Message}");
             }
             finally
             {
                 lblUsuarioActual.Text = "";
+            }
+        }
+
+        /// <summary>
+        /// Selecciona un comercial en dgv_base por su código, ciudad y radio
+        /// </summary>
+        private void SeleccionarComercialPorCodigo(string codigo, string ciudad, string radio)
+        {
+            try
+            {
+                // Limpiar selección actual
+                dgv_base.ClearSelection();
+
+                foreach (DataGridViewRow row in dgv_base.Rows)
+                {
+                    string rowCodigo = row.Cells["Codigo"]?.Value?.ToString() ?? "";
+                    string rowCiudad = row.Cells["Ciudad"]?.Value?.ToString() ?? "";
+                    string rowRadio = row.Cells["Radio"]?.Value?.ToString() ?? "";
+
+                    // Comparar código (puede ser numérico o con prefijo)
+                    bool codigoCoincide = rowCodigo == codigo ||
+                                          rowCodigo == codigo.Replace("CU-", "") ||
+                                          rowCodigo == $"CU-{codigo}";
+
+                    if (codigoCoincide && rowCiudad == ciudad && rowRadio == radio)
+                    {
+                        row.Selected = true;
+                        dgv_base.CurrentCell = row.Cells[0];
+
+                        // Asegurar que la fila sea visible
+                        if (row.Index < dgv_base.FirstDisplayedScrollingRowIndex ||
+                            row.Index >= dgv_base.FirstDisplayedScrollingRowIndex + dgv_base.DisplayedRowCount(false))
+                        {
+                            dgv_base.FirstDisplayedScrollingRowIndex = row.Index;
+                        }
+
+                        System.Diagnostics.Debug.WriteLine($"[SELECCIONAR] Comercial re-seleccionado: Código={codigo}, Ciudad={ciudad}, Radio={radio}");
+                        return;
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[SELECCIONAR] No se encontró comercial: Código={codigo}, Ciudad={ciudad}, Radio={radio}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SELECCIONAR] Error: {ex.Message}");
             }
         }
 
@@ -3954,16 +3992,53 @@ namespace Generador_Pautas
         {
             if (string.IsNullOrEmpty(hora)) return -1;
 
-            // Obtener el tipo de tanda del comercial seleccionado
-            TipoTanda tipoTanda = TipoTanda.Tandas_00_30; // Por defecto
+            // Detectar el tipo de tanda basado en la hora seleccionada
+            // Analizamos los minutos de la hora para determinar el tipo
+            TipoTanda tipoTanda = DetectarTipoTandaPorHora(hora);
+
+            string radio = "";
             if (dgv_base.SelectedRows.Count > 0)
             {
-                string radio = dgv_base.SelectedRows[0].Cells["Radio"]?.Value?.ToString() ?? "";
-                tipoTanda = DetectarTipoProgramacionPorRadio(radio);
+                radio = dgv_base.SelectedRows[0].Cells["Radio"]?.Value?.ToString() ?? "";
             }
 
             // Usar TandasHorarias para obtener el índice correcto
-            return TandasHorarias.GetFilaParaHora(hora, tipoTanda);
+            int fila = TandasHorarias.GetFilaParaHora(hora, tipoTanda);
+
+            System.Diagnostics.Debug.WriteLine($"[CALC-FILA] Hora: '{hora}', Radio: '{radio}', TipoTanda detectado: {tipoTanda}, Fila calculada: {fila}");
+
+            // DEBUG: Mostrar todas las horas del tipo de tanda para verificar
+            var horarios = TandasHorarias.GetHorarios(tipoTanda);
+            System.Diagnostics.Debug.WriteLine($"[CALC-FILA] Horarios del tipo {tipoTanda}: {string.Join(", ", horarios.Take(10))}...");
+
+            return fila;
+        }
+
+        /// <summary>
+        /// Detecta el tipo de tanda basándose en los minutos de la hora
+        /// </summary>
+        private TipoTanda DetectarTipoTandaPorHora(string hora)
+        {
+            if (string.IsNullOrEmpty(hora)) return TipoTanda.Tandas_00_30;
+
+            // Extraer minutos de la hora (formato HH:MM)
+            var partes = hora.Split(':');
+            if (partes.Length < 2) return TipoTanda.Tandas_00_30;
+
+            if (int.TryParse(partes[1], out int minutos))
+            {
+                // Determinar tipo de tanda según los minutos
+                if (minutos == 0 || minutos == 30)
+                    return TipoTanda.Tandas_00_30;
+                else if (minutos == 15 || minutos == 45)
+                    return TipoTanda.Tandas_15_45;
+                else if (minutos == 10 || minutos == 40)
+                    return TipoTanda.Tandas_10_40;
+                else if (minutos == 20 || minutos == 50)
+                    return TipoTanda.Tandas_20_50;
+            }
+
+            return TipoTanda.Tandas_00_30;
         }
 
         /// <summary>

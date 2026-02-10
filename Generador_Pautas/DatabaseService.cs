@@ -482,78 +482,44 @@ namespace Generador_Pautas
             {
                 await conn.OpenAsync();
 
-                // Obtener la FechaInicio del comercial para calcular columnas (registros legacy)
-                DateTime? fechaInicioComercial = null;
-                string queryFechaInicio = @"SELECT FechaInicio FROM Comerciales
-                                            WHERE Codigo LIKE @Codigo
-                                            AND LOWER(Ciudad) = LOWER(@Ciudad)
-                                            AND LOWER(Radio) = LOWER(@Radio)
-                                            LIMIT 1";
-                using (var cmdFecha = new NpgsqlCommand(queryFechaInicio, conn))
+                System.Diagnostics.Debug.WriteLine($"[DB-ELIM-FECHAS] ========================================");
+                System.Diagnostics.Debug.WriteLine($"[DB-ELIM-FECHAS] Codigo: {codigo}");
+                System.Diagnostics.Debug.WriteLine($"[DB-ELIM-FECHAS] Fechas: {fechaInicio:dd/MM/yyyy} - {fechaFin:dd/MM/yyyy}");
+
+                // DEBUG: Contar cuántos registros hay antes de eliminar
+                string queryContar = @"SELECT COUNT(*) FROM ComercialesAsignados
+                                       WHERE (Codigo LIKE @Codigo OR Codigo LIKE @CodigoConPrefijo)
+                                       AND Fecha IS NOT NULL
+                                       AND Fecha::date >= @FechaInicio::date
+                                       AND Fecha::date <= @FechaFin::date";
+                using (var cmdContar = new NpgsqlCommand(queryContar, conn))
                 {
-                    cmdFecha.Parameters.AddWithValue("@Codigo", $"%{codigo}%");
-                    cmdFecha.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
-                    cmdFecha.Parameters.AddWithValue("@Radio", radio ?? "");
-                    var result = await cmdFecha.ExecuteScalarAsync();
-                    if (result != null && result != DBNull.Value)
-                    {
-                        fechaInicioComercial = (DateTime)result;
-                    }
+                    cmdContar.Parameters.AddWithValue("@Codigo", $"%{codigo}%");
+                    cmdContar.Parameters.AddWithValue("@CodigoConPrefijo", $"%-{codigo}");
+                    cmdContar.Parameters.AddWithValue("@FechaInicio", fechaInicio);
+                    cmdContar.Parameters.AddWithValue("@FechaFin", fechaFin);
+                    var countAntes = await cmdContar.ExecuteScalarAsync();
+                    System.Diagnostics.Debug.WriteLine($"[DB-ELIM-FECHAS] Registros que coinciden: {countAntes}");
                 }
 
-                // 1. Eliminar registros CON fecha (registros nuevos)
-                string queryEliminarConFecha = @"DELETE FROM ComercialesAsignados
-                                         WHERE Codigo IN (
-                                             SELECT Codigo FROM Comerciales
-                                             WHERE Codigo LIKE @Codigo
-                                             AND LOWER(Ciudad) = LOWER(@Ciudad)
-                                             AND LOWER(Radio) = LOWER(@Radio)
-                                         )
+                // Eliminar directamente de ComercialesAsignados por codigo y rango de fechas
+                // El código puede ser exacto o con prefijo de ciudad
+                string queryEliminar = @"DELETE FROM ComercialesAsignados
+                                         WHERE (Codigo LIKE @Codigo OR Codigo LIKE @CodigoConPrefijo)
                                          AND Fecha IS NOT NULL
                                          AND Fecha::date >= @FechaInicio::date
                                          AND Fecha::date <= @FechaFin::date";
 
-                using (NpgsqlCommand cmdEliminar = new NpgsqlCommand(queryEliminarConFecha, conn))
+                using (NpgsqlCommand cmdEliminar = new NpgsqlCommand(queryEliminar, conn))
                 {
                     cmdEliminar.Parameters.AddWithValue("@Codigo", $"%{codigo}%");
-                    cmdEliminar.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
-                    cmdEliminar.Parameters.AddWithValue("@Radio", radio ?? "");
+                    cmdEliminar.Parameters.AddWithValue("@CodigoConPrefijo", $"%-{codigo}");
                     cmdEliminar.Parameters.AddWithValue("@FechaInicio", fechaInicio);
                     cmdEliminar.Parameters.AddWithValue("@FechaFin", fechaFin);
 
-                    int eliminadosConFecha = await cmdEliminar.ExecuteNonQueryAsync();
-                    totalEliminados += eliminadosConFecha;
-                }
+                    totalEliminados = await cmdEliminar.ExecuteNonQueryAsync();
 
-                // 2. Eliminar registros SIN fecha (registros legacy que usan Columna)
-                if (fechaInicioComercial.HasValue)
-                {
-                    // Calcular las columnas correspondientes al rango de fechas
-                    int columnaInicio = (fechaInicio - fechaInicioComercial.Value).Days + 2;
-                    int columnaFinal = (fechaFin - fechaInicioComercial.Value).Days + 2;
-
-                    string queryEliminarSinFecha = @"DELETE FROM ComercialesAsignados
-                                             WHERE Codigo IN (
-                                                 SELECT Codigo FROM Comerciales
-                                                 WHERE Codigo LIKE @Codigo
-                                                 AND LOWER(Ciudad) = LOWER(@Ciudad)
-                                                 AND LOWER(Radio) = LOWER(@Radio)
-                                             )
-                                             AND Fecha IS NULL
-                                             AND Columna >= @ColumnaInicio
-                                             AND Columna <= @ColumnaFinal";
-
-                    using (NpgsqlCommand cmdEliminarLegacy = new NpgsqlCommand(queryEliminarSinFecha, conn))
-                    {
-                        cmdEliminarLegacy.Parameters.AddWithValue("@Codigo", $"%{codigo}%");
-                        cmdEliminarLegacy.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
-                        cmdEliminarLegacy.Parameters.AddWithValue("@Radio", radio ?? "");
-                        cmdEliminarLegacy.Parameters.AddWithValue("@ColumnaInicio", columnaInicio);
-                        cmdEliminarLegacy.Parameters.AddWithValue("@ColumnaFinal", columnaFinal);
-
-                        int eliminadosSinFecha = await cmdEliminarLegacy.ExecuteNonQueryAsync();
-                        totalEliminados += eliminadosSinFecha;
-                    }
+                    System.Diagnostics.Debug.WriteLine($"[DB-ELIM-FECHAS] Eliminados: {totalEliminados}");
                 }
             }
 
@@ -616,6 +582,7 @@ namespace Generador_Pautas
         /// <summary>
         /// Elimina comerciales asignados por codigo, hora (fila) especifica Y rango de fechas.
         /// Combina filtro de hora + fechas para eliminación precisa.
+        /// Busca directamente en ComercialesAsignados sin depender de la tabla Comerciales.
         /// </summary>
         public async Task<int> EliminarComercialesAsignadosPorCodigoHoraYFechasAsync(
             string codigo, int fila, DateTime fechaInicio, DateTime fechaFin, string ciudad, string radio)
@@ -626,36 +593,53 @@ namespace Generador_Pautas
             {
                 await conn.OpenAsync();
 
-                // Primero contar cuántos registros hay antes de eliminar
-                string queryContar = @"SELECT COUNT(*) FROM ComercialesAsignados ca
-                                       INNER JOIN Comerciales c ON ca.Codigo = c.Codigo
-                                       WHERE ca.Codigo LIKE @Codigo
-                                       AND c.Ciudad = @Ciudad
-                                       AND c.Radio = @Radio
-                                       AND ca.Fila = @Fila
-                                       AND ca.Fecha IS NOT NULL
-                                       AND ca.Fecha::date >= @FechaInicio::date
-                                       AND ca.Fecha::date <= @FechaFin::date";
+                // DEBUG: Ver qué registros existen para este código
+                string queryDebug = @"SELECT DISTINCT Codigo, Fila, Fecha::date as Fecha
+                                      FROM ComercialesAsignados
+                                      WHERE Codigo LIKE @Codigo
+                                      ORDER BY Fila, Fecha
+                                      LIMIT 20";
+                using (var cmdDebug = new NpgsqlCommand(queryDebug, conn))
+                {
+                    cmdDebug.Parameters.AddWithValue("@Codigo", $"%{codigo}%");
+                    using (var reader = await cmdDebug.ExecuteReaderAsync())
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[DB-DEBUG] Registros existentes para codigo '{codigo}':");
+                        int count = 0;
+                        while (await reader.ReadAsync())
+                        {
+                            var codigoDb = reader["Codigo"]?.ToString();
+                            var filaDb = reader["Fila"];
+                            var fechaDb = reader["Fecha"];
+                            System.Diagnostics.Debug.WriteLine($"[DB-DEBUG]   - Codigo: {codigoDb}, Fila: {filaDb}, Fecha: {fechaDb}");
+                            count++;
+                        }
+                        System.Diagnostics.Debug.WriteLine($"[DB-DEBUG] Total registros encontrados: {count}");
+                    }
+                }
 
-                using (NpgsqlCommand cmdContar = new NpgsqlCommand(queryContar, conn))
+                // DEBUG: Contar cuántos coinciden con el filtro ANTES de eliminar
+                string queryContar = @"SELECT COUNT(*) FROM ComercialesAsignados
+                                       WHERE (Codigo LIKE @Codigo OR Codigo LIKE @CodigoConPrefijo)
+                                       AND Fila = @Fila
+                                       AND Fecha IS NOT NULL
+                                       AND Fecha::date >= @FechaInicio::date
+                                       AND Fecha::date <= @FechaFin::date";
+                using (var cmdContar = new NpgsqlCommand(queryContar, conn))
                 {
                     cmdContar.Parameters.AddWithValue("@Codigo", $"%{codigo}%");
-                    cmdContar.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
-                    cmdContar.Parameters.AddWithValue("@Radio", radio ?? "");
+                    cmdContar.Parameters.AddWithValue("@CodigoConPrefijo", $"%-{codigo}");
                     cmdContar.Parameters.AddWithValue("@Fila", fila);
                     cmdContar.Parameters.AddWithValue("@FechaInicio", fechaInicio);
                     cmdContar.Parameters.AddWithValue("@FechaFin", fechaFin);
-                    var count = await cmdContar.ExecuteScalarAsync();
+                    var countAntes = await cmdContar.ExecuteScalarAsync();
+                    System.Diagnostics.Debug.WriteLine($"[DB-DEBUG] Registros que coinciden con filtro (Fila={fila}): {countAntes}");
                 }
 
-                // Eliminar con filtro de hora + rango de fechas
+                // Eliminar directamente de ComercialesAsignados por codigo y fila (hora)
+                // El código en ComercialesAsignados puede ser exacto o con prefijo de ciudad
                 string queryEliminar = @"DELETE FROM ComercialesAsignados
-                                         WHERE Codigo IN (
-                                             SELECT Codigo FROM Comerciales
-                                             WHERE Codigo LIKE @Codigo
-                                             AND Ciudad = @Ciudad
-                                             AND Radio = @Radio
-                                         )
+                                         WHERE (Codigo LIKE @Codigo OR Codigo LIKE @CodigoConPrefijo)
                                          AND Fila = @Fila
                                          AND Fecha IS NOT NULL
                                          AND Fecha::date >= @FechaInicio::date
@@ -663,14 +647,16 @@ namespace Generador_Pautas
 
                 using (NpgsqlCommand cmdEliminar = new NpgsqlCommand(queryEliminar, conn))
                 {
+                    // Buscar por código exacto o con sufijo/prefijo
                     cmdEliminar.Parameters.AddWithValue("@Codigo", $"%{codigo}%");
-                    cmdEliminar.Parameters.AddWithValue("@Ciudad", ciudad ?? "");
-                    cmdEliminar.Parameters.AddWithValue("@Radio", radio ?? "");
+                    cmdEliminar.Parameters.AddWithValue("@CodigoConPrefijo", $"%-{codigo}");
                     cmdEliminar.Parameters.AddWithValue("@Fila", fila);
                     cmdEliminar.Parameters.AddWithValue("@FechaInicio", fechaInicio);
                     cmdEliminar.Parameters.AddWithValue("@FechaFin", fechaFin);
 
                     totalEliminados = await cmdEliminar.ExecuteNonQueryAsync();
+
+                    System.Diagnostics.Debug.WriteLine($"[DB] EliminarPorHora - Codigo: {codigo}, Fila buscada: {fila}, Fechas: {fechaInicio:dd/MM} - {fechaFin:dd/MM}, Eliminados: {totalEliminados}");
                 }
             }
 
@@ -1184,6 +1170,7 @@ namespace Generador_Pautas
         /// <summary>
         /// Crea índices para mejorar el rendimiento de las consultas.
         /// Se ejecuta una vez al iniciar la aplicación.
+        /// Solo se ejecuta si el usuario es propietario de las tablas.
         /// </summary>
         public static async Task CrearIndicesAsync()
         {
@@ -1192,6 +1179,20 @@ namespace Generador_Pautas
                 using (var conn = new NpgsqlConnection(DatabaseConfig.ConnectionString))
                 {
                     await conn.OpenAsync();
+
+                    // Verificar si el usuario es propietario de las tablas antes de intentar crear índices
+                    string checkOwner = @"SELECT COUNT(*) FROM pg_tables
+                                          WHERE tablename = 'comerciales' AND tableowner = current_user";
+                    using (var checkCmd = new NpgsqlCommand(checkOwner, conn))
+                    {
+                        long count = (long)await checkCmd.ExecuteScalarAsync();
+                        if (count == 0)
+                        {
+                            // No es propietario, omitir creación de índices silenciosamente
+                            System.Diagnostics.Debug.WriteLine("[DatabaseService] Usuario no es propietario - omitiendo CrearIndicesAsync");
+                            return;
+                        }
+                    }
 
                     // Lista de índices a crear (IF NOT EXISTS evita errores si ya existen)
                     string[] indices = new string[]

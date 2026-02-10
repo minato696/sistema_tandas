@@ -24,6 +24,53 @@ namespace Generador_Pautas
         private static string _configFilePath;
         private static Dictionary<string, Dictionary<string, string>> _config;
 
+        /// <summary>
+        /// Verifica si una ruta de LocalApplicationData es válida y accesible
+        /// Excluye carpetas de sistema como TEMP, UMFD-*, Font Driver Host, etc.
+        /// No genera excepciones - solo verifica patrones de texto.
+        /// </summary>
+        private static bool EsRutaLocalAppDataValida(string ruta)
+        {
+            if (string.IsNullOrEmpty(ruta))
+                return false;
+
+            // Excluir rutas de usuarios de servicio/sistema (solo verificación de texto, sin I/O)
+            string rutaUpper = ruta.ToUpperInvariant();
+            string[] patronesExcluir = {
+                "\\TEMP",
+                "\\UMFD-",
+                "\\FONT DRIVER HOST",
+                "\\DWMADMIN",
+                "\\DEFAULTAPPPOOL",
+                "\\SYSTEM32\\CONFIG\\SYSTEMPROFILE",
+                "\\TEMP.",
+                ".FONT DRIVER HOST"
+            };
+
+            foreach (var patron in patronesExcluir)
+            {
+                if (rutaUpper.Contains(patron))
+                    return false;
+            }
+
+            // Solo aceptar rutas que contengan el nombre de usuario actual de Windows
+            try
+            {
+                string currentUser = Environment.UserName;
+                if (!string.IsNullOrEmpty(currentUser) && !rutaUpper.Contains(currentUser.ToUpperInvariant()))
+                {
+                    // La ruta no contiene el nombre de usuario actual, probablemente es de otro usuario del sistema
+                    return false;
+                }
+            }
+            catch
+            {
+                // Si no podemos obtener el nombre de usuario, aceptar la ruta
+            }
+
+            return true;
+        }
+
         static ConfigManager()
         {
             // Buscar config.ini en el directorio de la aplicacion
@@ -111,7 +158,10 @@ namespace Generador_Pautas
                 { "KARIBEÑA", @"C:\KARIBEÑA\Comerciales\" },
                 { "KARIBENA", @"C:\KARIBEÑA\Comerciales\" },
                 { "EXITOSA", @"C:\EXITOSA\Comerciales\" },
-
+                { "LA HOT", @"C:\LA HOT\Comerciales\" },
+                { "LAHOT", @"C:\LA HOT\Comerciales\" },
+                { "RADIO Z", @"C:\RADIO Z\Comerciales\" },
+                { "RADIOZ", @"C:\RADIO Z\Comerciales\" }
             };
 
             try
@@ -148,6 +198,10 @@ namespace Generador_Pautas
                 sb.AppendLine(@"KARIBEÑA=C:\KARIBEÑA\Comerciales\");
                 sb.AppendLine(@"KARIBENA=C:\KARIBEÑA\Comerciales\");
                 sb.AppendLine(@"EXITOSA=C:\EXITOSA\Comerciales\");
+                sb.AppendLine(@"LA HOT=C:\LA HOT\Comerciales\");
+                sb.AppendLine(@"LAHOT=C:\LA HOT\Comerciales\");
+                sb.AppendLine(@"RADIO Z=C:\RADIO Z\Comerciales\");
+                sb.AppendLine(@"RADIOZ=C:\RADIO Z\Comerciales\");
 
                 File.WriteAllText(_configFilePath, sb.ToString(), Encoding.UTF8);
             }
@@ -329,13 +383,36 @@ namespace Generador_Pautas
                 // Crear ruta local en AppData para cache
                 if (_rutaLocalCache == null)
                 {
-                    string appDataFolder = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                        "GeneradorPautas");
+                    string appDataFolder;
+                    try
+                    {
+                        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                        if (!string.IsNullOrEmpty(localAppData) && EsRutaLocalAppDataValida(localAppData))
+                        {
+                            appDataFolder = Path.Combine(localAppData, "GeneradorPautas");
+                        }
+                        else
+                        {
+                            // Fallback: usar carpeta de la aplicación
+                            appDataFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                        }
+                    }
+                    catch
+                    {
+                        appDataFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                    }
 
                     if (!Directory.Exists(appDataFolder))
                     {
-                        Directory.CreateDirectory(appDataFolder);
+                        try
+                        {
+                            Directory.CreateDirectory(appDataFolder);
+                        }
+                        catch
+                        {
+                            // Si no se puede crear, usar la carpeta de la aplicación
+                            appDataFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                        }
                     }
 
                     _rutaLocalCache = Path.Combine(appDataFolder, "Data_Cache.db");
@@ -649,7 +726,11 @@ namespace Generador_Pautas
             string username = ObtenerValor("PostgreSQL", "Username", "pautas_user");
             string password = ObtenerValor("PostgreSQL", "Password", "Pautas2024!");
 
-            return $"Host={host};Port={port};Database={database};Username={username};Password={password};Pooling=true;";
+            // Optimizaciones de conexión para red local
+            return $"Host={host};Port={port};Database={database};Username={username};Password={password};" +
+                   "Pooling=true;MinPoolSize=5;MaxPoolSize=20;" +
+                   "ConnectionIdleLifetime=300;ConnectionPruningInterval=10;" +
+                   "Timeout=30;CommandTimeout=60;";
         }
 
         /// <summary>

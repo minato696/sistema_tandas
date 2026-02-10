@@ -97,6 +97,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CacheService.cs" />
+    <Compile Include="ComercialService.cs" />
     <Compile Include="ConfigManager.cs" />
     <Compile Include="SQLiteMigration.cs" />
     <Compile Include="DashboardControl.cs">

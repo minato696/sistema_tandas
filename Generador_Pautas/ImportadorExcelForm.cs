@@ -525,8 +525,8 @@ namespace Generador_Pautas
 
             // Lista de radios conocidas (ordenadas de mas larga a mas corta para mejor coincidencia)
             string[] radiosConocidas = {
-                "RITMO ROMANTICA", "PANAMERICANA", "LA KALLE", "KARIBEÑA", "EXITOSA",
-                "NUEVA Q", "LAKALLE", "MODA", "OASIS", "RPP"
+                "LA KALLE", "KARIBEÑA", "EXITOSA", "LA HOT", "RADIO Z",
+                "LAKALLE", "LAHOT", "RADIOZ"
             };
 
             string ciudad = "";
@@ -849,7 +849,7 @@ namespace Generador_Pautas
             string resto = match.Groups[2].Value;
 
             // Buscar radios conocidas
-            string[] radiosConocidas = { "KARIBEÑA", "LA KALLE", "EXITOSA", "NUEVA Q", "MODA", "RITMO ROMANTICA", "OASIS", "PANAMERICANA", "RPP" };
+            string[] radiosConocidas = { "KARIBEÑA", "LA KALLE", "EXITOSA", "LA HOT", "RADIO Z", "LAKALLE", "LAHOT", "RADIOZ" };
             string ciudad = "";
             string radio = "";
 

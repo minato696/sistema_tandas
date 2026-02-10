@@ -17,6 +17,10 @@ namespace Generador_Pautas
         public string Posicion { get; set; }
         public string Estado { get; set; }
         public string TipoProgramacion { get; set; } = "Cada 00-30";
+        /// <summary>
+        /// Días seleccionados como string: "1,2,3,4,5,6,0" donde 1=Lunes, ..., 0=Domingo
+        /// </summary>
+        public string DiasSeleccionados { get; set; } = "1,2,3,4,5"; // L-V por defecto
 
     }
 }

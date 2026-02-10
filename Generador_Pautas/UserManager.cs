@@ -17,9 +17,72 @@ namespace Generador_Pautas
         private static Usuario _usuarioActual;
 
         // Archivo para guardar sesion
-        private static readonly string SessionFile = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "GeneradorPautas", "session.dat");
+        private static readonly string SessionFile = ObtenerRutaSessionFile();
+
+        private static string ObtenerRutaSessionFile()
+        {
+            try
+            {
+                // Intentar usar LocalApplicationData
+                string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                if (!string.IsNullOrEmpty(localAppData) && EsRutaValida(localAppData))
+                {
+                    return Path.Combine(localAppData, "GeneradorPautas", "session.dat");
+                }
+            }
+            catch { }
+
+            // Fallback: usar carpeta de la aplicación
+            string appFolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            return Path.Combine(appFolder, "session.dat");
+        }
+
+        /// <summary>
+        /// Verifica si una ruta de usuario es válida y accesible
+        /// Excluye carpetas de sistema como TEMP, UMFD-*, Font Driver Host, etc.
+        /// No genera excepciones - solo verifica patrones de texto.
+        /// </summary>
+        private static bool EsRutaValida(string ruta)
+        {
+            if (string.IsNullOrEmpty(ruta))
+                return false;
+
+            // Excluir rutas de usuarios de servicio/sistema (solo verificación de texto, sin I/O)
+            string rutaUpper = ruta.ToUpperInvariant();
+            string[] patronesExcluir = {
+                "\\TEMP",
+                "\\UMFD-",
+                "\\FONT DRIVER HOST",
+                "\\DWMADMIN",
+                "\\DEFAULTAPPPOOL",
+                "\\SYSTEM32\\CONFIG\\SYSTEMPROFILE",
+                "\\TEMP.",
+                ".FONT DRIVER HOST"
+            };
+
+            foreach (var patron in patronesExcluir)
+            {
+                if (rutaUpper.Contains(patron))
+                    return false;
+            }
+
+            // Solo aceptar rutas que contengan el nombre de usuario actual de Windows
+            try
+            {
+                string currentUser = Environment.UserName;
+                if (!string.IsNullOrEmpty(currentUser) && !rutaUpper.Contains(currentUser.ToUpperInvariant()))
+                {
+                    // La ruta no contiene el nombre de usuario actual, probablemente es de otro usuario del sistema
+                    return false;
+                }
+            }
+            catch
+            {
+                // Si no podemos obtener el nombre de usuario, aceptar la ruta
+            }
+
+            return true;
+        }
 
         // Clave para encriptar (en produccion usar DPAPI o similar)
         private static readonly byte[] Key = Encoding.UTF8.GetBytes("GP_SecretKey2024");

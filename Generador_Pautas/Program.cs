@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -6,12 +7,32 @@ namespace Generador_Pautas
 {
     internal static class Program
     {
+        // Mutex para evitar múltiples instancias
+        private static Mutex _mutex = null;
+        private const string MUTEX_NAME = "GeneradorPautas_SingleInstance_Mutex";
+
         /// <summary>
         /// Punto de entrada principal para la aplicacion.
         /// </summary>
         [STAThread]
         static void Main()
         {
+            // Verificar si ya hay una instancia ejecutándose
+            bool createdNew;
+            _mutex = new Mutex(true, MUTEX_NAME, out createdNew);
+
+            if (!createdNew)
+            {
+                // Ya existe una instancia, mostrar mensaje y salir
+                MessageBox.Show(
+                    "El Generador de Pautas ya está ejecutándose.\n\n" +
+                    "Busque la ventana existente en la barra de tareas.",
+                    "Aplicación ya abierta",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -88,6 +109,15 @@ namespace Generador_Pautas
             catch (Exception ex)
             {
                 MostrarError("Error al iniciar la aplicacion", ex);
+            }
+            finally
+            {
+                // Liberar el Mutex al cerrar la aplicación
+                if (_mutex != null)
+                {
+                    _mutex.ReleaseMutex();
+                    _mutex.Dispose();
+                }
             }
         }
 

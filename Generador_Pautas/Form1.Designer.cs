@@ -36,21 +36,6 @@ namespace Generador_Pautas
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.pnlMain = new System.Windows.Forms.TableLayoutPanel();
-            this.pnlLeft = new System.Windows.Forms.Panel();
-            this.dgv_archivos = new System.Windows.Forms.DataGridView();
-            this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.pnlPlayer = new System.Windows.Forms.Panel();
-            this.btn_limpiar = new System.Windows.Forms.Button();
-            this.btn_pause = new System.Windows.Forms.Button();
-            this.btn_stop = new System.Windows.Forms.Button();
-            this.btn_play = new System.Windows.Forms.Button();
-            this.elegantProgressBar1 = new System.Windows.Forms.ProgressBar();
-            this.progressBarRight = new System.Windows.Forms.ProgressBar();
-            this.progressBarLeft = new System.Windows.Forms.ProgressBar();
             this.pnlRight = new System.Windows.Forms.Panel();
             this.pnlTopRight = new System.Windows.Forms.Panel();
             this.dgv_base = new System.Windows.Forms.DataGridView();
@@ -95,10 +80,20 @@ namespace Generador_Pautas
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lblCreditos = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblVersion = new System.Windows.Forms.ToolStripStatusLabel();
+            this.pnlPlayer = new System.Windows.Forms.Panel();
+            this.progressBarLeft = new System.Windows.Forms.ProgressBar();
+            this.progressBarRight = new System.Windows.Forms.ProgressBar();
+            this.elegantProgressBar1 = new System.Windows.Forms.ProgressBar();
+            this.btn_play = new System.Windows.Forms.Button();
+            this.btn_stop = new System.Windows.Forms.Button();
+            this.btn_pause = new System.Windows.Forms.Button();
+            this.btn_limpiar = new System.Windows.Forms.Button();
+            this.pnlLeft = new System.Windows.Forms.Panel();
+            this.Column4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dgv_archivos = new System.Windows.Forms.DataGridView();
             this.pnlMain.SuspendLayout();
-            this.pnlLeft.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgv_archivos)).BeginInit();
-            this.pnlPlayer.SuspendLayout();
             this.pnlRight.SuspendLayout();
             this.pnlTopRight.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_base)).BeginInit();
@@ -110,12 +105,15 @@ namespace Generador_Pautas
             ((System.ComponentModel.ISupportInitialize)(this.dgv_ciudades)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgv_estaciones)).BeginInit();
             this.statusStrip1.SuspendLayout();
+            this.pnlPlayer.SuspendLayout();
+            this.pnlLeft.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgv_archivos)).BeginInit();
             this.SuspendLayout();
             // 
             // pnlMain
             // 
             this.pnlMain.ColumnCount = 2;
-            this.pnlMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 320F));
+            this.pnlMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 650F));
             this.pnlMain.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.pnlMain.Controls.Add(this.pnlLeft, 0, 0);
             this.pnlMain.Controls.Add(this.pnlRight, 1, 0);
@@ -128,198 +126,14 @@ namespace Generador_Pautas
             this.pnlMain.Size = new System.Drawing.Size(1400, 750);
             this.pnlMain.TabIndex = 0;
             // 
-            // pnlLeft
-            // 
-            this.pnlLeft.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(245)))), ((int)(((byte)(250)))));
-            this.pnlLeft.Controls.Add(this.dgv_archivos);
-            this.pnlLeft.Controls.Add(this.pnlPlayer);
-            this.pnlLeft.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlLeft.Location = new System.Drawing.Point(13, 13);
-            this.pnlLeft.Name = "pnlLeft";
-            this.pnlLeft.Size = new System.Drawing.Size(314, 724);
-            this.pnlLeft.TabIndex = 0;
-            // 
-            // dgv_archivos
-            // 
-            this.dgv_archivos.AllowUserToAddRows = false;
-            this.dgv_archivos.AllowUserToDeleteRows = false;
-            this.dgv_archivos.AllowUserToResizeRows = false;
-            this.dgv_archivos.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgv_archivos.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(248)))), ((int)(((byte)(250)))));
-            this.dgv_archivos.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgv_archivos.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
-            this.dgv_archivos.ColumnHeadersHeight = 35;
-            this.dgv_archivos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            this.dgv_archivos.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.Column1,
-            this.Column2,
-            this.Column3,
-            this.Column4,
-            this.Column5});
-            this.dgv_archivos.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgv_archivos.EnableHeadersVisualStyles = false;
-            this.dgv_archivos.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(210)))), ((int)(((byte)(220)))));
-            this.dgv_archivos.Location = new System.Drawing.Point(0, 0);
-            this.dgv_archivos.Name = "dgv_archivos";
-            this.dgv_archivos.ReadOnly = true;
-            this.dgv_archivos.RowHeadersVisible = false;
-            this.dgv_archivos.RowTemplate.Height = 28;
-            this.dgv_archivos.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgv_archivos.Size = new System.Drawing.Size(314, 594);
-            this.dgv_archivos.TabIndex = 1;
-            // 
-            // Column1
-            // 
-            this.Column1.FillWeight = 25F;
-            this.Column1.HeaderText = "#";
-            this.Column1.MinimumWidth = 30;
-            this.Column1.Name = "Column1";
-            this.Column1.ReadOnly = true;
-            // 
-            // Column2
-            // 
-            this.Column2.FillWeight = 120F;
-            this.Column2.HeaderText = "Nombre";
-            this.Column2.MinimumWidth = 100;
-            this.Column2.Name = "Column2";
-            this.Column2.ReadOnly = true;
-            // 
-            // Column3
-            // 
-            this.Column3.FillWeight = 45F;
-            this.Column3.HeaderText = "Dur.";
-            this.Column3.MinimumWidth = 45;
-            this.Column3.Name = "Column3";
-            this.Column3.ReadOnly = true;
-            // 
-            // Column4
-            // 
-            this.Column4.FillWeight = 45F;
-            this.Column4.HeaderText = "Pos.";
-            this.Column4.MinimumWidth = 45;
-            this.Column4.Name = "Column4";
-            this.Column4.ReadOnly = true;
-            // 
-            // Column5
-            // 
-            this.Column5.FillWeight = 50F;
-            this.Column5.HeaderText = "Kbps";
-            this.Column5.MinimumWidth = 55;
-            this.Column5.Name = "Column5";
-            this.Column5.ReadOnly = true;
-            // 
-            // pnlPlayer
-            // 
-            this.pnlPlayer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(225)))), ((int)(((byte)(230)))), ((int)(((byte)(240)))));
-            this.pnlPlayer.Controls.Add(this.btn_limpiar);
-            this.pnlPlayer.Controls.Add(this.btn_pause);
-            this.pnlPlayer.Controls.Add(this.btn_stop);
-            this.pnlPlayer.Controls.Add(this.btn_play);
-            this.pnlPlayer.Controls.Add(this.elegantProgressBar1);
-            this.pnlPlayer.Controls.Add(this.progressBarRight);
-            this.pnlPlayer.Controls.Add(this.progressBarLeft);
-            this.pnlPlayer.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlPlayer.Location = new System.Drawing.Point(0, 594);
-            this.pnlPlayer.Name = "pnlPlayer";
-            this.pnlPlayer.Padding = new System.Windows.Forms.Padding(8);
-            this.pnlPlayer.Size = new System.Drawing.Size(314, 130);
-            this.pnlPlayer.TabIndex = 2;
-            // 
-            // btn_limpiar
-            // 
-            this.btn_limpiar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(120)))), ((int)(((byte)(144)))), ((int)(((byte)(156)))));
-            this.btn_limpiar.FlatAppearance.BorderSize = 0;
-            this.btn_limpiar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_limpiar.Font = new System.Drawing.Font("Segoe UI Semibold", 7F, System.Drawing.FontStyle.Bold);
-            this.btn_limpiar.ForeColor = System.Drawing.Color.White;
-            this.btn_limpiar.Location = new System.Drawing.Point(233, 82);
-            this.btn_limpiar.Name = "btn_limpiar";
-            this.btn_limpiar.Size = new System.Drawing.Size(70, 36);
-            this.btn_limpiar.TabIndex = 6;
-            this.btn_limpiar.Text = "LIMPIAR";
-            this.btn_limpiar.UseVisualStyleBackColor = false;
-            this.btn_limpiar.Click += new System.EventHandler(this.btn_limpiar_Click);
-            // 
-            // btn_pause
-            // 
-            this.btn_pause.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(152)))), ((int)(((byte)(0)))));
-            this.btn_pause.FlatAppearance.BorderSize = 0;
-            this.btn_pause.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_pause.Font = new System.Drawing.Font("Segoe UI Semibold", 6.5F, System.Drawing.FontStyle.Bold);
-            this.btn_pause.ForeColor = System.Drawing.Color.White;
-            this.btn_pause.Location = new System.Drawing.Point(158, 82);
-            this.btn_pause.Name = "btn_pause";
-            this.btn_pause.Size = new System.Drawing.Size(70, 36);
-            this.btn_pause.TabIndex = 5;
-            this.btn_pause.Text = "ELIMINAR";
-            this.btn_pause.UseVisualStyleBackColor = false;
-            this.btn_pause.Click += new System.EventHandler(this.btn_eliminar_archivo_Click);
-            // 
-            // btn_stop
-            // 
-            this.btn_stop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(67)))), ((int)(((byte)(54)))));
-            this.btn_stop.FlatAppearance.BorderSize = 0;
-            this.btn_stop.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_stop.Font = new System.Drawing.Font("Segoe UI Semibold", 7F, System.Drawing.FontStyle.Bold);
-            this.btn_stop.ForeColor = System.Drawing.Color.White;
-            this.btn_stop.Location = new System.Drawing.Point(83, 82);
-            this.btn_stop.Name = "btn_stop";
-            this.btn_stop.Size = new System.Drawing.Size(70, 36);
-            this.btn_stop.TabIndex = 4;
-            this.btn_stop.Text = "STOP";
-            this.btn_stop.UseVisualStyleBackColor = false;
-            this.btn_stop.Click += new System.EventHandler(this.btn_stop_Click);
-            // 
-            // btn_play
-            // 
-            this.btn_play.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
-            this.btn_play.FlatAppearance.BorderSize = 0;
-            this.btn_play.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_play.Font = new System.Drawing.Font("Segoe UI Semibold", 7F, System.Drawing.FontStyle.Bold);
-            this.btn_play.ForeColor = System.Drawing.Color.White;
-            this.btn_play.Location = new System.Drawing.Point(8, 82);
-            this.btn_play.Name = "btn_play";
-            this.btn_play.Size = new System.Drawing.Size(70, 36);
-            this.btn_play.TabIndex = 3;
-            this.btn_play.Text = "PLAY";
-            this.btn_play.UseVisualStyleBackColor = false;
-            this.btn_play.Click += new System.EventHandler(this.btn_play_Click);
-            // 
-            // elegantProgressBar1
-            // 
-            this.elegantProgressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.elegantProgressBar1.Location = new System.Drawing.Point(8, 48);
-            this.elegantProgressBar1.Name = "elegantProgressBar1";
-            this.elegantProgressBar1.Size = new System.Drawing.Size(298, 20);
-            this.elegantProgressBar1.TabIndex = 2;
-            // 
-            // progressBarRight
-            // 
-            this.progressBarRight.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBarRight.Location = new System.Drawing.Point(8, 28);
-            this.progressBarRight.Name = "progressBarRight";
-            this.progressBarRight.Size = new System.Drawing.Size(298, 12);
-            this.progressBarRight.TabIndex = 1;
-            // 
-            // progressBarLeft
-            // 
-            this.progressBarLeft.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBarLeft.Location = new System.Drawing.Point(8, 12);
-            this.progressBarLeft.Name = "progressBarLeft";
-            this.progressBarLeft.Size = new System.Drawing.Size(298, 12);
-            this.progressBarLeft.TabIndex = 0;
-            // 
             // pnlRight
             // 
             this.pnlRight.Controls.Add(this.pnlTopRight);
             this.pnlRight.Controls.Add(this.pnlBottomRight);
             this.pnlRight.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.pnlRight.Location = new System.Drawing.Point(333, 13);
+            this.pnlRight.Location = new System.Drawing.Point(573, 13);
             this.pnlRight.Name = "pnlRight";
-            this.pnlRight.Size = new System.Drawing.Size(1054, 724);
+            this.pnlRight.Size = new System.Drawing.Size(814, 724);
             this.pnlRight.TabIndex = 1;
             // 
             // pnlTopRight
@@ -330,19 +144,24 @@ namespace Generador_Pautas
             this.pnlTopRight.Dock = System.Windows.Forms.DockStyle.Fill;
             this.pnlTopRight.Location = new System.Drawing.Point(0, 0);
             this.pnlTopRight.Name = "pnlTopRight";
-            this.pnlTopRight.Size = new System.Drawing.Size(1054, 564);
+            this.pnlTopRight.Size = new System.Drawing.Size(814, 564);
             this.pnlTopRight.TabIndex = 0;
-            // 
+            //
             // dgv_base
-            // 
+            //
             this.dgv_base.AllowUserToAddRows = false;
             this.dgv_base.AllowUserToDeleteRows = false;
             this.dgv_base.AllowUserToResizeRows = false;
             this.dgv_base.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgv_base.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.dgv_base.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
             this.dgv_base.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dgv_base.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
-            this.dgv_base.ColumnHeadersHeight = 40;
+            this.dgv_base.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
+            this.dgv_base.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            this.dgv_base.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.dgv_base.ColumnHeadersDefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
+            this.dgv_base.ColumnHeadersDefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.dgv_base.ColumnHeadersHeight = 28;
             this.dgv_base.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.dgv_base.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Column20,
@@ -353,16 +172,23 @@ namespace Generador_Pautas
             this.Column25,
             this.Column26,
             this.Column27});
+            this.dgv_base.DefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(250)))), ((int)(((byte)(250)))));
+            this.dgv_base.DefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+            this.dgv_base.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(120)))), ((int)(((byte)(215)))));
+            this.dgv_base.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            this.dgv_base.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 8.5F);
+            this.dgv_base.DefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            this.dgv_base.AlternatingRowsDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(243)))), ((int)(((byte)(255)))));
             this.dgv_base.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgv_base.EnableHeadersVisualStyles = false;
-            this.dgv_base.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.dgv_base.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(200)))), ((int)(((byte)(200)))));
             this.dgv_base.Location = new System.Drawing.Point(0, 100);
             this.dgv_base.Name = "dgv_base";
             this.dgv_base.ReadOnly = true;
             this.dgv_base.RowHeadersVisible = false;
-            this.dgv_base.RowTemplate.Height = 32;
+            this.dgv_base.RowTemplate.Height = 20;
             this.dgv_base.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgv_base.Size = new System.Drawing.Size(1054, 464);
+            this.dgv_base.Size = new System.Drawing.Size(814, 464);
             this.dgv_base.TabIndex = 2;
             this.dgv_base.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgv_base_CellDoubleClick);
             // 
@@ -436,7 +262,7 @@ namespace Generador_Pautas
             this.pnlFiltros.Location = new System.Drawing.Point(0, 50);
             this.pnlFiltros.Name = "pnlFiltros";
             this.pnlFiltros.Padding = new System.Windows.Forms.Padding(10);
-            this.pnlFiltros.Size = new System.Drawing.Size(1054, 50);
+            this.pnlFiltros.Size = new System.Drawing.Size(814, 50);
             this.pnlFiltros.TabIndex = 1;
             // 
             // btnLimpiarFiltro
@@ -538,14 +364,14 @@ namespace Generador_Pautas
             this.pnlToolbar.Location = new System.Drawing.Point(0, 0);
             this.pnlToolbar.Name = "pnlToolbar";
             this.pnlToolbar.Padding = new System.Windows.Forms.Padding(8);
-            this.pnlToolbar.Size = new System.Drawing.Size(1054, 50);
+            this.pnlToolbar.Size = new System.Drawing.Size(814, 50);
             this.pnlToolbar.TabIndex = 0;
             // 
             // dashboardControl1
             // 
             this.dashboardControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.dashboardControl1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(245)))));
-            this.dashboardControl1.Location = new System.Drawing.Point(762, 0);
+            this.dashboardControl1.Location = new System.Drawing.Point(522, 0);
             this.dashboardControl1.Name = "dashboardControl1";
             this.dashboardControl1.Size = new System.Drawing.Size(280, 51);
             this.dashboardControl1.TabIndex = 4;
@@ -562,7 +388,7 @@ namespace Generador_Pautas
             this.pnlBottomRight.Location = new System.Drawing.Point(0, 564);
             this.pnlBottomRight.Name = "pnlBottomRight";
             this.pnlBottomRight.Padding = new System.Windows.Forms.Padding(10);
-            this.pnlBottomRight.Size = new System.Drawing.Size(1054, 160);
+            this.pnlBottomRight.Size = new System.Drawing.Size(814, 160);
             this.pnlBottomRight.TabIndex = 1;
             // 
             // dgv_pautas
@@ -610,7 +436,7 @@ namespace Generador_Pautas
             this.grpEliminarPautas.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.grpEliminarPautas.Location = new System.Drawing.Point(710, 12);
             this.grpEliminarPautas.Name = "grpEliminarPautas";
-            this.grpEliminarPautas.Size = new System.Drawing.Size(330, 180);
+            this.grpEliminarPautas.Size = new System.Drawing.Size(90, 180);
             this.grpEliminarPautas.TabIndex = 8;
             this.grpEliminarPautas.TabStop = false;
             this.grpEliminarPautas.Text = "Eliminar Pautas";
@@ -754,27 +580,35 @@ namespace Generador_Pautas
             this.lblPautasTitulo.Text = "Pautas";
             this.lblPautasTitulo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.lblPautasTitulo.Visible = false;
-            // 
+            //
             // dgv_ciudades
-            // 
+            //
             this.dgv_ciudades.AllowUserToAddRows = false;
             this.dgv_ciudades.AllowUserToDeleteRows = false;
             this.dgv_ciudades.AllowUserToResizeColumns = false;
             this.dgv_ciudades.AllowUserToResizeRows = false;
             this.dgv_ciudades.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgv_ciudades.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.dgv_ciudades.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(250)))), ((int)(((byte)(250)))));
             this.dgv_ciudades.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgv_ciudades.ColumnHeadersHeight = 30;
+            this.dgv_ciudades.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(150)))), ((int)(((byte)(243)))));
+            this.dgv_ciudades.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            this.dgv_ciudades.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI Semibold", 8F, System.Drawing.FontStyle.Bold);
+            this.dgv_ciudades.ColumnHeadersDefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(150)))), ((int)(((byte)(243)))));
+            this.dgv_ciudades.ColumnHeadersHeight = 25;
             this.dgv_ciudades.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.dgv_ciudades.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.dataGridViewTextBoxColumn1});
+            this.dgv_ciudades.DefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(250)))), ((int)(((byte)(250)))));
+            this.dgv_ciudades.DefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.dgv_ciudades.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(33)))), ((int)(((byte)(150)))), ((int)(((byte)(243)))));
+            this.dgv_ciudades.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
             this.dgv_ciudades.EnableHeadersVisualStyles = false;
-            this.dgv_ciudades.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.dgv_ciudades.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
             this.dgv_ciudades.Location = new System.Drawing.Point(220, 50);
             this.dgv_ciudades.Name = "dgv_ciudades";
             this.dgv_ciudades.ReadOnly = true;
             this.dgv_ciudades.RowHeadersVisible = false;
-            this.dgv_ciudades.RowTemplate.Height = 28;
+            this.dgv_ciudades.RowTemplate.Height = 22;
             this.dgv_ciudades.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgv_ciudades.Size = new System.Drawing.Size(200, 140);
             this.dgv_ciudades.TabIndex = 3;
@@ -784,27 +618,35 @@ namespace Generador_Pautas
             this.dataGridViewTextBoxColumn1.HeaderText = "CIUDADES";
             this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
             this.dataGridViewTextBoxColumn1.ReadOnly = true;
-            // 
+            //
             // dgv_estaciones
-            // 
+            //
             this.dgv_estaciones.AllowUserToAddRows = false;
             this.dgv_estaciones.AllowUserToDeleteRows = false;
             this.dgv_estaciones.AllowUserToResizeColumns = false;
             this.dgv_estaciones.AllowUserToResizeRows = false;
             this.dgv_estaciones.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dgv_estaciones.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+            this.dgv_estaciones.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(250)))), ((int)(((byte)(250)))));
             this.dgv_estaciones.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dgv_estaciones.ColumnHeadersHeight = 30;
+            this.dgv_estaciones.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(152)))), ((int)(((byte)(0)))));
+            this.dgv_estaciones.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            this.dgv_estaciones.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI Semibold", 8F, System.Drawing.FontStyle.Bold);
+            this.dgv_estaciones.ColumnHeadersDefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(152)))), ((int)(((byte)(0)))));
+            this.dgv_estaciones.ColumnHeadersHeight = 25;
             this.dgv_estaciones.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             this.dgv_estaciones.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Column6});
+            this.dgv_estaciones.DefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(250)))), ((int)(((byte)(250)))));
+            this.dgv_estaciones.DefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(50)))), ((int)(((byte)(50)))), ((int)(((byte)(50)))));
+            this.dgv_estaciones.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(193)))), ((int)(((byte)(7)))));
+            this.dgv_estaciones.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.Black;
             this.dgv_estaciones.EnableHeadersVisualStyles = false;
-            this.dgv_estaciones.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(60)))), ((int)(((byte)(60)))), ((int)(((byte)(60)))));
+            this.dgv_estaciones.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(220)))), ((int)(((byte)(220)))), ((int)(((byte)(220)))));
             this.dgv_estaciones.Location = new System.Drawing.Point(10, 50);
             this.dgv_estaciones.Name = "dgv_estaciones";
             this.dgv_estaciones.ReadOnly = true;
             this.dgv_estaciones.RowHeadersVisible = false;
-            this.dgv_estaciones.RowTemplate.Height = 28;
+            this.dgv_estaciones.RowTemplate.Height = 22;
             this.dgv_estaciones.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgv_estaciones.Size = new System.Drawing.Size(200, 140);
             this.dgv_estaciones.TabIndex = 2;
@@ -842,6 +684,184 @@ namespace Generador_Pautas
             this.lblVersion.Text = "Versión 2.0.0  |  dev@corporacionuniversal.pe";
             this.lblVersion.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
+            // pnlPlayer
+            // 
+            this.pnlPlayer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(225)))), ((int)(((byte)(230)))), ((int)(((byte)(240)))));
+            this.pnlPlayer.Controls.Add(this.btn_limpiar);
+            this.pnlPlayer.Controls.Add(this.btn_pause);
+            this.pnlPlayer.Controls.Add(this.btn_stop);
+            this.pnlPlayer.Controls.Add(this.btn_play);
+            this.pnlPlayer.Controls.Add(this.elegantProgressBar1);
+            this.pnlPlayer.Controls.Add(this.progressBarRight);
+            this.pnlPlayer.Controls.Add(this.progressBarLeft);
+            this.pnlPlayer.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.pnlPlayer.Location = new System.Drawing.Point(0, 594);
+            this.pnlPlayer.Name = "pnlPlayer";
+            this.pnlPlayer.Padding = new System.Windows.Forms.Padding(8);
+            this.pnlPlayer.Size = new System.Drawing.Size(554, 130);
+            this.pnlPlayer.TabIndex = 2;
+            // 
+            // progressBarLeft
+            // 
+            this.progressBarLeft.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBarLeft.Location = new System.Drawing.Point(8, 12);
+            this.progressBarLeft.Name = "progressBarLeft";
+            this.progressBarLeft.Size = new System.Drawing.Size(538, 12);
+            this.progressBarLeft.TabIndex = 0;
+            // 
+            // progressBarRight
+            // 
+            this.progressBarRight.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBarRight.Location = new System.Drawing.Point(8, 28);
+            this.progressBarRight.Name = "progressBarRight";
+            this.progressBarRight.Size = new System.Drawing.Size(538, 12);
+            this.progressBarRight.TabIndex = 1;
+            // 
+            // elegantProgressBar1
+            // 
+            this.elegantProgressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.elegantProgressBar1.Location = new System.Drawing.Point(8, 48);
+            this.elegantProgressBar1.Name = "elegantProgressBar1";
+            this.elegantProgressBar1.Size = new System.Drawing.Size(538, 20);
+            this.elegantProgressBar1.TabIndex = 2;
+            // 
+            // btn_play
+            // 
+            this.btn_play.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(76)))), ((int)(((byte)(175)))), ((int)(((byte)(80)))));
+            this.btn_play.FlatAppearance.BorderSize = 0;
+            this.btn_play.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_play.Font = new System.Drawing.Font("Segoe UI Semibold", 7F, System.Drawing.FontStyle.Bold);
+            this.btn_play.ForeColor = System.Drawing.Color.White;
+            this.btn_play.Location = new System.Drawing.Point(8, 82);
+            this.btn_play.Name = "btn_play";
+            this.btn_play.Size = new System.Drawing.Size(70, 36);
+            this.btn_play.TabIndex = 3;
+            this.btn_play.Text = "PLAY";
+            this.btn_play.UseVisualStyleBackColor = false;
+            this.btn_play.Click += new System.EventHandler(this.btn_play_Click);
+            // 
+            // btn_stop
+            // 
+            this.btn_stop.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(67)))), ((int)(((byte)(54)))));
+            this.btn_stop.FlatAppearance.BorderSize = 0;
+            this.btn_stop.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_stop.Font = new System.Drawing.Font("Segoe UI Semibold", 7F, System.Drawing.FontStyle.Bold);
+            this.btn_stop.ForeColor = System.Drawing.Color.White;
+            this.btn_stop.Location = new System.Drawing.Point(83, 82);
+            this.btn_stop.Name = "btn_stop";
+            this.btn_stop.Size = new System.Drawing.Size(70, 36);
+            this.btn_stop.TabIndex = 4;
+            this.btn_stop.Text = "STOP";
+            this.btn_stop.UseVisualStyleBackColor = false;
+            this.btn_stop.Click += new System.EventHandler(this.btn_stop_Click);
+            // 
+            // btn_pause
+            // 
+            this.btn_pause.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(152)))), ((int)(((byte)(0)))));
+            this.btn_pause.FlatAppearance.BorderSize = 0;
+            this.btn_pause.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_pause.Font = new System.Drawing.Font("Segoe UI Semibold", 6.5F, System.Drawing.FontStyle.Bold);
+            this.btn_pause.ForeColor = System.Drawing.Color.White;
+            this.btn_pause.Location = new System.Drawing.Point(158, 82);
+            this.btn_pause.Name = "btn_pause";
+            this.btn_pause.Size = new System.Drawing.Size(70, 36);
+            this.btn_pause.TabIndex = 5;
+            this.btn_pause.Text = "ELIMINAR";
+            this.btn_pause.UseVisualStyleBackColor = false;
+            this.btn_pause.Click += new System.EventHandler(this.btn_eliminar_archivo_Click);
+            // 
+            // btn_limpiar
+            // 
+            this.btn_limpiar.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(120)))), ((int)(((byte)(144)))), ((int)(((byte)(156)))));
+            this.btn_limpiar.FlatAppearance.BorderSize = 0;
+            this.btn_limpiar.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_limpiar.Font = new System.Drawing.Font("Segoe UI Semibold", 7F, System.Drawing.FontStyle.Bold);
+            this.btn_limpiar.ForeColor = System.Drawing.Color.White;
+            this.btn_limpiar.Location = new System.Drawing.Point(233, 82);
+            this.btn_limpiar.Name = "btn_limpiar";
+            this.btn_limpiar.Size = new System.Drawing.Size(70, 36);
+            this.btn_limpiar.TabIndex = 6;
+            this.btn_limpiar.Text = "LIMPIAR";
+            this.btn_limpiar.UseVisualStyleBackColor = false;
+            this.btn_limpiar.Click += new System.EventHandler(this.btn_limpiar_Click);
+            // 
+            // pnlLeft
+            // 
+            this.pnlLeft.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(245)))), ((int)(((byte)(250)))));
+            this.pnlLeft.Controls.Add(this.dgv_archivos);
+            this.pnlLeft.Controls.Add(this.pnlPlayer);
+            this.pnlLeft.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.pnlLeft.Location = new System.Drawing.Point(13, 13);
+            this.pnlLeft.Name = "pnlLeft";
+            this.pnlLeft.Size = new System.Drawing.Size(554, 724);
+            this.pnlLeft.TabIndex = 0;
+            // 
+            // Column4
+            // 
+            this.Column4.FillWeight = 30F;
+            this.Column4.HeaderText = "Kbps";
+            this.Column4.MinimumWidth = 40;
+            this.Column4.Name = "Column4";
+            this.Column4.ReadOnly = true;
+            // 
+            // Column3
+            // 
+            this.Column3.FillWeight = 30F;
+            this.Column3.HeaderText = "Dur.";
+            this.Column3.MinimumWidth = 40;
+            this.Column3.Name = "Column3";
+            this.Column3.ReadOnly = true;
+            // 
+            // Column2
+            // 
+            this.Column2.FillWeight = 200F;
+            this.Column2.HeaderText = "Nombre";
+            this.Column2.MinimumWidth = 100;
+            this.Column2.Name = "Column2";
+            this.Column2.ReadOnly = true;
+            //
+            // dgv_archivos
+            //
+            this.dgv_archivos.AllowUserToAddRows = false;
+            this.dgv_archivos.AllowUserToDeleteRows = false;
+            this.dgv_archivos.AllowUserToResizeRows = false;
+            this.dgv_archivos.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dgv_archivos.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(248)))), ((int)(((byte)(250)))));
+            this.dgv_archivos.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.dgv_archivos.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
+            this.dgv_archivos.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(63)))), ((int)(((byte)(81)))), ((int)(((byte)(181)))));
+            this.dgv_archivos.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            this.dgv_archivos.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI Semibold", 9F, System.Drawing.FontStyle.Bold);
+            this.dgv_archivos.ColumnHeadersDefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(63)))), ((int)(((byte)(81)))), ((int)(((byte)(181)))));
+            this.dgv_archivos.ColumnHeadersDefaultCellStyle.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            this.dgv_archivos.ColumnHeadersDefaultCellStyle.Padding = new System.Windows.Forms.Padding(5, 0, 0, 0);
+            this.dgv_archivos.ColumnHeadersHeight = 30;
+            this.dgv_archivos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            this.dgv_archivos.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.Column2,
+            this.Column3,
+            this.Column4});
+            this.dgv_archivos.DefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(250)))), ((int)(((byte)(255)))));
+            this.dgv_archivos.DefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(40)))), ((int)(((byte)(40)))));
+            this.dgv_archivos.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(120)))), ((int)(((byte)(215)))));
+            this.dgv_archivos.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            this.dgv_archivos.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 8.5F);
+            this.dgv_archivos.AlternatingRowsDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(235)))), ((int)(((byte)(240)))), ((int)(((byte)(255)))));
+            this.dgv_archivos.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dgv_archivos.EnableHeadersVisualStyles = false;
+            this.dgv_archivos.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(200)))), ((int)(((byte)(210)))), ((int)(((byte)(220)))));
+            this.dgv_archivos.Location = new System.Drawing.Point(0, 0);
+            this.dgv_archivos.Name = "dgv_archivos";
+            this.dgv_archivos.ReadOnly = true;
+            this.dgv_archivos.RowHeadersVisible = false;
+            this.dgv_archivos.RowTemplate.Height = 26;
+            this.dgv_archivos.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgv_archivos.Size = new System.Drawing.Size(554, 594);
+            this.dgv_archivos.TabIndex = 1;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -861,9 +881,6 @@ namespace Generador_Pautas
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.pnlMain.ResumeLayout(false);
-            this.pnlLeft.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgv_archivos)).EndInit();
-            this.pnlPlayer.ResumeLayout(false);
             this.pnlRight.ResumeLayout(false);
             this.pnlTopRight.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgv_base)).EndInit();
@@ -878,6 +895,9 @@ namespace Generador_Pautas
             ((System.ComponentModel.ISupportInitialize)(this.dgv_estaciones)).EndInit();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.pnlPlayer.ResumeLayout(false);
+            this.pnlLeft.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgv_archivos)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -887,13 +907,11 @@ namespace Generador_Pautas
 
         // Paneles principales
         private System.Windows.Forms.TableLayoutPanel pnlMain;
-        private System.Windows.Forms.Panel pnlLeft;
         private System.Windows.Forms.Panel pnlRight;
         private System.Windows.Forms.Panel pnlTopRight;
         private System.Windows.Forms.Panel pnlBottomRight;
         private System.Windows.Forms.Panel pnlToolbar;
         private System.Windows.Forms.Panel pnlFiltros;
-        private System.Windows.Forms.Panel pnlPlayer;
 
         // FileExplorer
         public System.Windows.Forms.DataGridView dgv_base;
@@ -914,15 +932,6 @@ namespace Generador_Pautas
         private System.Windows.Forms.DataGridViewTextBoxColumn Column6;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
 
-
-        // Botones principales
-
-        // Botones reproductor
-        public System.Windows.Forms.Button btn_play;
-        public System.Windows.Forms.Button btn_stop;
-        public System.Windows.Forms.Button btn_pause;
-        public System.Windows.Forms.Button btn_limpiar;
-
         // Filtros
         private System.Windows.Forms.Label lblFiltroEstado;
         private System.Windows.Forms.ComboBox cboFiltroEstado;
@@ -931,12 +940,6 @@ namespace Generador_Pautas
         private System.Windows.Forms.TextBox txtBusqueda;
         private System.Windows.Forms.Button btnBuscar;
         private System.Windows.Forms.Button btnLimpiarFiltro;
-
-
-        // Progress Bars
-        private System.Windows.Forms.ProgressBar elegantProgressBar1;
-        private System.Windows.Forms.ProgressBar progressBarLeft;
-        private System.Windows.Forms.ProgressBar progressBarRight;
 
         // Pautas del comercial seleccionado
         private System.Windows.Forms.DataGridView dgv_pautas;
@@ -961,12 +964,19 @@ namespace Generador_Pautas
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripStatusLabel lblVersion;
         private System.Windows.Forms.ToolStripStatusLabel lblCreditos;
+        private System.Windows.Forms.Panel dashboardControl1;
+        private System.Windows.Forms.Panel pnlLeft;
         public System.Windows.Forms.DataGridView dgv_archivos;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column3;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column4;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Column5;
-        private System.Windows.Forms.Panel dashboardControl1;
+        private System.Windows.Forms.Panel pnlPlayer;
+        public System.Windows.Forms.Button btn_limpiar;
+        public System.Windows.Forms.Button btn_pause;
+        public System.Windows.Forms.Button btn_stop;
+        public System.Windows.Forms.Button btn_play;
+        private System.Windows.Forms.ProgressBar elegantProgressBar1;
+        private System.Windows.Forms.ProgressBar progressBarRight;
+        private System.Windows.Forms.ProgressBar progressBarLeft;
     }
 }

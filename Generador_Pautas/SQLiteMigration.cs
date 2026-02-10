@@ -8,6 +8,35 @@ namespace Generador_Pautas
     {
         public static string ConnectionString => ConfigManager.ObtenerPostgreSQLConnectionString();
 
+        /// <summary>
+        /// Verifica si el usuario actual es propietario de las tablas principales.
+        /// Si no es propietario, no intentaremos ALTER TABLE para evitar excepciones.
+        /// </summary>
+        private static bool VerificarSiEsPropietario(NpgsqlConnection conn)
+        {
+            try
+            {
+                // Verificar si el usuario actual es propietario de la tabla Comerciales
+                string query = @"
+                    SELECT COUNT(*) FROM pg_tables
+                    WHERE tablename = 'comerciales'
+                    AND tableowner = current_user";
+
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    long count = (long)cmd.ExecuteScalar();
+                    bool esPropietario = count > 0;
+                    System.Diagnostics.Debug.WriteLine($"[MIGRATION] Usuario es propietario de tablas: {esPropietario}");
+                    return esPropietario;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[MIGRATION] Error verificando propietario: {ex.Message}");
+                return false; // Por seguridad, asumir que no es propietario
+            }
+        }
+
         public static void InicializarBaseDeDatos()
         {
             try
@@ -15,6 +44,9 @@ namespace Generador_Pautas
                 using (NpgsqlConnection conn = new NpgsqlConnection(ConnectionString))
                 {
                     conn.Open();
+
+                    // Verificar si tenemos permisos de propietario en las tablas principales
+                    bool esPropietario = VerificarSiEsPropietario(conn);
 
                     // Las tablas ya fueron creadas en PostgreSQL en el servidor
                     // Solo verificamos que existan y creamos las que falten
@@ -40,11 +72,22 @@ namespace Generador_Pautas
                     // Crear tabla RadiosCiudades si no existe
                     CrearTablaRadiosCiudades(conn);
 
-                    // Crear indices para mejorar rendimiento
-                    CrearIndices(conn);
+                    // Solo ejecutar operaciones que requieren ser propietario si tenemos permisos
+                    if (esPropietario)
+                    {
+                        // Crear indices para mejorar rendimiento
+                        CrearIndices(conn);
 
-                    // Migración: Agregar columna Fecha a ComercialesAsignados si no existe
-                    AgregarColumnaFechaSiNoExiste(conn);
+                        // Migración: Agregar columna Fecha a ComercialesAsignados si no existe
+                        AgregarColumnaFechaSiNoExiste(conn);
+
+                        // Migración: Agregar columna DiasSeleccionados a Comerciales si no existe
+                        AgregarColumnaDiasSeleccionadosSiNoExiste(conn);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("[MIGRATION] Usuario no es propietario - omitiendo migraciones de ALTER TABLE");
+                    }
 
                     // Crear usuarios por defecto
                     CrearUsuariosPorDefecto(conn);
@@ -111,34 +154,100 @@ namespace Generador_Pautas
         }
 
         /// <summary>
+        /// Agrega la columna DiasSeleccionados a Comerciales si no existe (migración)
+        /// Guarda los días seleccionados como string: "1,2,3,4,5" (1=Lun, 2=Mar, ..., 0=Dom)
+        /// </summary>
+        private static void AgregarColumnaDiasSeleccionadosSiNoExiste(NpgsqlConnection conn)
+        {
+            try
+            {
+                // Primero verificar si la columna ya existe
+                string checkQuery = @"
+                    SELECT COUNT(*) FROM information_schema.columns
+                    WHERE table_name = 'comerciales' AND column_name = 'diasseleccionados'";
+
+                using (var cmd = new NpgsqlCommand(checkQuery, conn))
+                {
+                    long count = (long)cmd.ExecuteScalar();
+                    if (count > 0)
+                    {
+                        // La columna ya existe, no hacer nada
+                        System.Diagnostics.Debug.WriteLine("[MIGRATION] Columna DiasSeleccionados ya existe");
+                        return;
+                    }
+                }
+
+                // Intentar agregar la columna si no existe
+                string alterQuery = "ALTER TABLE Comerciales ADD COLUMN DiasSeleccionados VARCHAR(20) DEFAULT '1,2,3,4,5'";
+                using (var cmd = new NpgsqlCommand(alterQuery, conn))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                System.Diagnostics.Debug.WriteLine("[MIGRATION] Columna DiasSeleccionados agregada correctamente");
+            }
+            catch (Exception ex)
+            {
+                // Silenciar errores de permisos - la columna probablemente ya existe o fue creada por el DBA
+                if (ex.Message.Contains("must be owner") || ex.Message.Contains("permission denied"))
+                {
+                    System.Diagnostics.Debug.WriteLine("[MIGRATION] Sin permisos para ALTER TABLE Comerciales (ignorado - columna puede existir)");
+                }
+                else if (!ex.Message.Contains("already exists"))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MIGRATION] Nota: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
         /// Agrega la columna Fecha a ComercialesAsignados si no existe (migración)
         /// </summary>
         private static void AgregarColumnaFechaSiNoExiste(NpgsqlConnection conn)
         {
-            // Verificar si la columna existe
-            string checkQuery = @"
-                SELECT COUNT(*) FROM information_schema.columns
-                WHERE table_name = 'comercialesasignados' AND column_name = 'fecha'";
-
-            using (var cmd = new NpgsqlCommand(checkQuery, conn))
+            try
             {
-                long count = (long)cmd.ExecuteScalar();
-                if (count == 0)
+                // Verificar si la columna existe
+                string checkQuery = @"
+                    SELECT COUNT(*) FROM information_schema.columns
+                    WHERE table_name = 'comercialesasignados' AND column_name = 'fecha'";
+
+                using (var cmd = new NpgsqlCommand(checkQuery, conn))
                 {
-                    // La columna no existe, agregarla
-                    string alterQuery = "ALTER TABLE ComercialesAsignados ADD COLUMN Fecha DATE";
-                    using (var alterCmd = new NpgsqlCommand(alterQuery, conn))
+                    long count = (long)cmd.ExecuteScalar();
+                    if (count > 0)
                     {
-                        alterCmd.ExecuteNonQuery();
+                        // La columna ya existe, no hacer nada
+                        System.Diagnostics.Debug.WriteLine("[MIGRATION] Columna Fecha ya existe en ComercialesAsignados");
+                        return;
                     }
+                }
 
-                    // Crear índice para mejorar búsquedas por fecha
-                    string indexQuery = "CREATE INDEX IF NOT EXISTS idx_comercialesasignados_fecha ON ComercialesAsignados(Fecha)";
-                    using (var indexCmd = new NpgsqlCommand(indexQuery, conn))
-                    {
-                        indexCmd.ExecuteNonQuery();
-                    }
+                // La columna no existe, intentar agregarla
+                string alterQuery = "ALTER TABLE ComercialesAsignados ADD COLUMN Fecha DATE";
+                using (var alterCmd = new NpgsqlCommand(alterQuery, conn))
+                {
+                    alterCmd.ExecuteNonQuery();
+                }
 
+                // Crear índice para mejorar búsquedas por fecha
+                string indexQuery = "CREATE INDEX IF NOT EXISTS idx_comercialesasignados_fecha ON ComercialesAsignados(Fecha)";
+                using (var indexCmd = new NpgsqlCommand(indexQuery, conn))
+                {
+                    indexCmd.ExecuteNonQuery();
+                }
+
+                System.Diagnostics.Debug.WriteLine("[MIGRATION] Columna Fecha agregada a ComercialesAsignados");
+            }
+            catch (Exception ex)
+            {
+                // Silenciar errores de permisos - la columna probablemente ya existe o fue creada por el DBA
+                if (ex.Message.Contains("must be owner") || ex.Message.Contains("permission denied"))
+                {
+                    System.Diagnostics.Debug.WriteLine("[MIGRATION] Sin permisos para ALTER TABLE ComercialesAsignados (ignorado - columna puede existir)");
+                }
+                else if (!ex.Message.Contains("already exists"))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[MIGRATION] Nota: {ex.Message}");
                 }
             }
         }
@@ -424,7 +533,11 @@ namespace Generador_Pautas
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Warning al crear indice: {ex.Message}");
+                    // Silenciar errores de permisos - los índices probablemente ya existen o fueron creados por el DBA
+                    if (!ex.Message.Contains("must be owner") && !ex.Message.Contains("permission denied"))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Warning al crear indice: {ex.Message}");
+                    }
                 }
             }
 
@@ -438,7 +551,11 @@ namespace Generador_Pautas
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Warning al ejecutar ANALYZE: {ex.Message}");
+                // Silenciar errores de permisos
+                if (!ex.Message.Contains("must be owner") && !ex.Message.Contains("permission denied"))
+                {
+                    System.Diagnostics.Debug.WriteLine($"Warning al ejecutar ANALYZE: {ex.Message}");
+                }
             }
         }
 

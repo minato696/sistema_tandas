@@ -9,6 +9,38 @@ namespace Generador_Pautas
 {
     public static class DataAccess
     {
+        // Cache para saber si la columna DiasSeleccionados existe (evitar verificar cada vez)
+        private static bool? _columnaDiasSeleccionadosExiste = null;
+
+        /// <summary>
+        /// Verifica si la columna DiasSeleccionados existe en la tabla Comerciales
+        /// </summary>
+        private static async Task<bool> ExisteColumnaDiasSeleccionadosAsync(NpgsqlConnection conn)
+        {
+            // Si ya verificamos, devolver el resultado cacheado
+            if (_columnaDiasSeleccionadosExiste.HasValue)
+                return _columnaDiasSeleccionadosExiste.Value;
+
+            try
+            {
+                string checkQuery = @"
+                    SELECT COUNT(*) FROM information_schema.columns
+                    WHERE table_name = 'comerciales' AND column_name = 'diasseleccionados'";
+
+                using (var cmd = new NpgsqlCommand(checkQuery, conn))
+                {
+                    long count = (long)await cmd.ExecuteScalarAsync();
+                    _columnaDiasSeleccionadosExiste = count > 0;
+                    return _columnaDiasSeleccionadosExiste.Value;
+                }
+            }
+            catch
+            {
+                _columnaDiasSeleccionadosExiste = false;
+                return false;
+            }
+        }
+
         public static async Task<DataTable> CargarDatosDesdeBaseDeDatosAsync(string connectionString, string tableName, int limite = 500)
         {
             DataTable dt = new DataTable();
@@ -53,11 +85,24 @@ namespace Generador_Pautas
             using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
             {
                 await connection.OpenAsync();
+
+                // Verificar si la columna DiasSeleccionados existe
+                bool incluirDias = await ExisteColumnaDiasSeleccionadosAsync(connection);
+
                 using (NpgsqlCommand command = new NpgsqlCommand("", connection))
                 {
-                    command.CommandText =
-                        $"INSERT INTO {tableName} (Codigo, FilePath, FechaInicio, FechaFinal, Ciudad, Radio, Posicion, Estado, TipoProgramacion) " +
-                        $"VALUES (@Codigo, @FilePath, @FechaInicio, @FechaFinal, @Ciudad, @Radio, @Posicion, @Estado, @TipoProgramacion)";
+                    if (incluirDias)
+                    {
+                        command.CommandText =
+                            $"INSERT INTO {tableName} (Codigo, FilePath, FechaInicio, FechaFinal, Ciudad, Radio, Posicion, Estado, TipoProgramacion, DiasSeleccionados) " +
+                            $"VALUES (@Codigo, @FilePath, @FechaInicio, @FechaFinal, @Ciudad, @Radio, @Posicion, @Estado, @TipoProgramacion, @DiasSeleccionados)";
+                    }
+                    else
+                    {
+                        command.CommandText =
+                            $"INSERT INTO {tableName} (Codigo, FilePath, FechaInicio, FechaFinal, Ciudad, Radio, Posicion, Estado, TipoProgramacion) " +
+                            $"VALUES (@Codigo, @FilePath, @FechaInicio, @FechaFinal, @Ciudad, @Radio, @Posicion, @Estado, @TipoProgramacion)";
+                    }
 
                     command.Parameters.AddWithValue("@Codigo", comercialesData.Codigo);
                     command.Parameters.AddWithValue("@FilePath", filePath);
@@ -68,6 +113,11 @@ namespace Generador_Pautas
                     command.Parameters.AddWithValue("@Posicion", comercialesData.Posicion);
                     command.Parameters.AddWithValue("@Estado", comercialesData.Estado);
                     command.Parameters.AddWithValue("@TipoProgramacion", comercialesData.TipoProgramacion ?? "Cada 00-30");
+
+                    if (incluirDias)
+                    {
+                        command.Parameters.AddWithValue("@DiasSeleccionados", comercialesData.DiasSeleccionados ?? "1,2,3,4,5");
+                    }
 
                     await command.ExecuteNonQueryAsync();
 
@@ -438,20 +488,49 @@ namespace Generador_Pautas
             using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
             {
                 await connection.OpenAsync();
-                string query = $@"
-                    UPDATE {tableName} SET
-                        FechaInicio = @FechaInicio,
-                        FechaFinal = @FechaFinal,
-                        Ciudad = @Ciudad,
-                        Radio = @Radio,
-                        Posicion = @Posicion,
-                        Estado = @Estado,
-                        TipoProgramacion = @TipoProgramacion
-                    WHERE Codigo = @Codigo";
+
+                // Verificar si la columna DiasSeleccionados existe
+                bool incluirDias = await ExisteColumnaDiasSeleccionadosAsync(connection);
+
+                // Extraer código numérico para comerciales ACC (ej: ACC-42262-ABA-EXI-0000 -> 42262)
+                string codigoNumerico = ExtraerCodigoNumerico(data.Codigo);
+
+                // Para comerciales ACC, actualizar TODOS los registros con el mismo código numérico
+                // Para otros comerciales, actualizar solo el registro exacto
+                string query;
+                string diasField = incluirDias ? ",\n                            DiasSeleccionados = @DiasSeleccionados" : "";
+
+                if (data.Codigo.StartsWith("ACC-", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(codigoNumerico))
+                {
+                    query = $@"
+                        UPDATE {tableName} SET
+                            FechaInicio = @FechaInicio,
+                            FechaFinal = @FechaFinal,
+                            Ciudad = @Ciudad,
+                            Radio = @Radio,
+                            Posicion = @Posicion,
+                            Estado = @Estado,
+                            TipoProgramacion = @TipoProgramacion{diasField}
+                        WHERE split_part(Codigo, '-', 2) = @CodigoNumerico";
+                }
+                else
+                {
+                    query = $@"
+                        UPDATE {tableName} SET
+                            FechaInicio = @FechaInicio,
+                            FechaFinal = @FechaFinal,
+                            Ciudad = @Ciudad,
+                            Radio = @Radio,
+                            Posicion = @Posicion,
+                            Estado = @Estado,
+                            TipoProgramacion = @TipoProgramacion{diasField}
+                        WHERE Codigo = @Codigo";
+                }
 
                 using (NpgsqlCommand cmd = new NpgsqlCommand(query, connection))
                 {
                     cmd.Parameters.AddWithValue("@Codigo", data.Codigo);
+                    cmd.Parameters.AddWithValue("@CodigoNumerico", codigoNumerico);
                     cmd.Parameters.AddWithValue("@FechaInicio", data.FechaInicio);
                     cmd.Parameters.AddWithValue("@FechaFinal", data.FechaFinal);
                     cmd.Parameters.AddWithValue("@Ciudad", data.Ciudad ?? (object)DBNull.Value);
@@ -460,28 +539,70 @@ namespace Generador_Pautas
                     cmd.Parameters.AddWithValue("@Estado", data.Estado ?? "Activo");
                     cmd.Parameters.AddWithValue("@TipoProgramacion", data.TipoProgramacion ?? (object)DBNull.Value);
 
-                    await cmd.ExecuteNonQueryAsync();
+                    if (incluirDias)
+                    {
+                        cmd.Parameters.AddWithValue("@DiasSeleccionados", data.DiasSeleccionados ?? "1,2,3,4,5");
+                    }
+
+                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                    System.Diagnostics.Debug.WriteLine($"[DataAccess] ActualizarComercial: {rowsAffected} registros actualizados para código {data.Codigo}");
                 }
             }
         }
 
         /// <summary>
+        /// Extrae el código numérico de un código completo (ej: ACC-42262-ABA-EXI-0000 -> 42262)
+        /// </summary>
+        private static string ExtraerCodigoNumerico(string codigo)
+        {
+            if (string.IsNullOrEmpty(codigo)) return "";
+
+            if (codigo.Contains("-"))
+            {
+                var partes = codigo.Split('-');
+                if (partes.Length >= 2 && int.TryParse(partes[1], out _))
+                {
+                    return partes[1];
+                }
+            }
+            return codigo;
+        }
+
+        /// <summary>
         /// Elimina todas las asignaciones de un comercial por su código
+        /// Para comerciales ACC, elimina todas las asignaciones con el mismo código numérico
         /// </summary>
         public static async Task EliminarAsignacionesPorCodigoAsync(string connectionString, string codigo)
         {
             using (NpgsqlConnection connection = new NpgsqlConnection(connectionString))
             {
                 await connection.OpenAsync();
-                string query = "DELETE FROM ComercialesAsignados WHERE Codigo = @Codigo";
+
+                // Extraer código numérico para comerciales ACC
+                string codigoNumerico = ExtraerCodigoNumerico(codigo);
+
+                string query;
+                if (codigo.StartsWith("ACC-", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(codigoNumerico))
+                {
+                    // Para ACC, eliminar por código numérico (todos los registros relacionados)
+                    query = @"DELETE FROM ComercialesAsignados
+                              WHERE Codigo = @Codigo
+                                 OR Codigo = @CodigoNumerico
+                                 OR split_part(Codigo, '-', 2) = @CodigoNumerico";
+                }
+                else
+                {
+                    query = "DELETE FROM ComercialesAsignados WHERE Codigo = @Codigo";
+                }
 
                 using (NpgsqlCommand cmd = new NpgsqlCommand(query, connection))
                 {
                     cmd.Parameters.AddWithValue("@Codigo", codigo);
-                    await cmd.ExecuteNonQueryAsync();
+                    cmd.Parameters.AddWithValue("@CodigoNumerico", codigoNumerico);
+                    int rowsDeleted = await cmd.ExecuteNonQueryAsync();
+                    Logger.Log($"[DataAccess] Eliminadas {rowsDeleted} asignaciones para código: {codigo}");
                 }
             }
-            System.Diagnostics.Debug.WriteLine($"[DataAccess] Eliminadas asignaciones para código: {codigo}");
         }
 
         /// <summary>
@@ -756,6 +877,10 @@ namespace Generador_Pautas
                 var cmd = new NpgsqlCommand();
                 cmd.Connection = conn;
 
+                // Filtro obligatorio: solo mostrar comerciales con FechaFinal >= hoy
+                condiciones.Add("FechaFinal >= @FechaHoy");
+                cmd.Parameters.AddWithValue("@FechaHoy", DateTime.Today);
+
                 // Filtro por estado
                 if (!string.IsNullOrEmpty(estadoFiltro) && estadoFiltro != "Todos")
                 {
@@ -791,6 +916,7 @@ namespace Generador_Pautas
                 string whereClause = condiciones.Count > 0 ? "WHERE " + string.Join(" AND ", condiciones) : "";
 
                 // Query con GROUP BY - usar LOWER para normalizar rutas (Windows es case-insensitive)
+                // Usar GREATEST para mostrar fecha de hoy como mínimo en FechaMinima
                 string query = $@"
                     SELECT
                         MAX(FilePath) as FilePath,
@@ -798,7 +924,7 @@ namespace Generador_Pautas
                         Ciudad,
                         Radio,
                         COUNT(*) as TotalRegistros,
-                        MIN(FechaInicio) as FechaMinima,
+                        GREATEST(MIN(FechaInicio), @FechaHoy) as FechaMinima,
                         MAX(FechaFinal) as FechaMaxima,
                         MAX(Posicion) as Posicion,
                         MAX(Estado) as EstadoGeneral
@@ -853,6 +979,10 @@ namespace Generador_Pautas
                 var condiciones = new System.Collections.Generic.List<string>();
                 var cmd = new NpgsqlCommand();
                 cmd.Connection = conn;
+
+                // Filtro obligatorio: solo contar comerciales con FechaFinal >= hoy
+                condiciones.Add("FechaFinal >= @FechaHoy");
+                cmd.Parameters.AddWithValue("@FechaHoy", DateTime.Today);
 
                 if (!string.IsNullOrEmpty(estadoFiltro) && estadoFiltro != "Todos")
                 {
@@ -1236,13 +1366,19 @@ namespace Generador_Pautas
                         System.Diagnostics.Debug.WriteLine($"DEBUG ObtenerFechasHoras - Código {codigo}: fechas reales encontradas = {fechasReales.Count}");
 
                         // Si hay fechas reales en ComercialesAsignados, usarlas
+                        // Solo mostrar fechas desde hoy en adelante
+                        DateTime fechaHoy = DateTime.Today;
                         if (fechasReales.Count > 0)
                         {
                             foreach (DateTime fecha in fechasReales.OrderBy(f => f))
                             {
-                                foreach (string hora in horasEncontradas)
+                                // Filtrar: solo fechas >= hoy
+                                if (fecha.Date >= fechaHoy)
                                 {
-                                    dt.Rows.Add(fecha.Date, hora);
+                                    foreach (string hora in horasEncontradas)
+                                    {
+                                        dt.Rows.Add(fecha.Date, hora);
+                                    }
                                 }
                             }
                         }
@@ -1296,9 +1432,11 @@ namespace Generador_Pautas
                                 }
 
                                 // Comercial Access: generar fechas del rango
+                                // Solo desde hoy en adelante
+                                DateTime fechaDesde = fechaInicio < fechaHoy ? fechaHoy : fechaInicio;
                                 foreach (string hora in horasEncontradas)
                                 {
-                                    DateTime fechaActual = fechaInicio;
+                                    DateTime fechaActual = fechaDesde;
                                     while (fechaActual <= fechaFinal)
                                     {
                                         bool agregarFecha = true;
@@ -1349,9 +1487,11 @@ namespace Generador_Pautas
                                     if (conteo > 0)
                                     {
                                         // Generar todas las combinaciones fecha+hora del rango
+                                        // Solo desde hoy en adelante
+                                        DateTime fechaDesde = fechaInicio < fechaHoy ? fechaHoy : fechaInicio;
                                         foreach (string hora in horasEncontradas)
                                         {
-                                            DateTime fechaActual = fechaInicio;
+                                            DateTime fechaActual = fechaDesde;
                                             while (fechaActual <= fechaFinal)
                                             {
                                                 dt.Rows.Add(fechaActual.Date, hora);
@@ -1480,7 +1620,7 @@ namespace Generador_Pautas
                         }
 
                         transaction.Commit();
-                        System.Diagnostics.Debug.WriteLine($"[DataAccess] Insertadas {asignaciones.Count} asignaciones masivas");
+                        Logger.Log($"[DataAccess] Insertadas {asignaciones.Count} asignaciones masivas");
 
                         // Invalidar caché después de insertar asignaciones
                         CacheService.InvalidarAsignaciones();
@@ -1492,6 +1632,177 @@ namespace Generador_Pautas
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Obtiene todas las horas de un comercial ACC basándose en su código numérico.
+        /// Retorna las horas en formato HH:mm extraídas de los códigos (ej: ACC-830-ABA-EXI-0800 -> 08:00)
+        /// </summary>
+        public static async Task<List<string>> ObtenerHorasACCPorCodigoNumericoAsync(
+            string connectionString,
+            string tableName,
+            string codigoNumerico)
+        {
+            var horas = new List<string>();
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
+            {
+                await conn.OpenAsync();
+
+                // Buscar todos los códigos ACC con el mismo código numérico
+                string query = $@"
+                    SELECT Codigo FROM {tableName}
+                    WHERE Codigo LIKE 'ACC-' || @CodigoNumerico || '-%'
+                    ORDER BY Codigo";
+
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@CodigoNumerico", codigoNumerico);
+
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            string codigo = reader["Codigo"].ToString();
+                            // Extraer la hora del último segmento (ACC-830-ABA-EXI-0800 -> 0800 -> 08:00)
+                            string[] partes = codigo.Split('-');
+                            if (partes.Length >= 5)
+                            {
+                                string horaStr = partes[partes.Length - 1];
+                                if (horaStr.Length == 4 && int.TryParse(horaStr, out _))
+                                {
+                                    string horaFormateada = $"{horaStr.Substring(0, 2)}:{horaStr.Substring(2, 2)}";
+                                    if (!horas.Contains(horaFormateada))
+                                    {
+                                        horas.Add(horaFormateada);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return horas;
+        }
+
+        /// <summary>
+        /// Crea un nuevo código ACC para una hora específica.
+        /// Copia los datos del comercial base y genera el nuevo código con la hora.
+        /// </summary>
+        public static async Task CrearCodigoACCParaHoraAsync(
+            string connectionString,
+            string tableName,
+            string codigoBase,
+            string horaFormato,
+            AgregarComercialesData datosBase)
+        {
+            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
+            {
+                await conn.OpenAsync();
+
+                // Extraer partes del código base (ACC-830-ABA-EXI-0800)
+                string[] partes = codigoBase.Split('-');
+                if (partes.Length < 5) return;
+
+                // Convertir hora (08:00 -> 0800)
+                string horaSinDospuntos = horaFormato.Replace(":", "");
+
+                // Construir nuevo código con la hora
+                string nuevoCodigo = $"{partes[0]}-{partes[1]}-{partes[2]}-{partes[3]}-{horaSinDospuntos}";
+
+                // Verificar si ya existe
+                string queryExiste = $"SELECT COUNT(*) FROM {tableName} WHERE Codigo = @Codigo";
+                using (var cmdExiste = new NpgsqlCommand(queryExiste, conn))
+                {
+                    cmdExiste.Parameters.AddWithValue("@Codigo", nuevoCodigo);
+                    int existe = Convert.ToInt32(await cmdExiste.ExecuteScalarAsync());
+                    if (existe > 0) return; // Ya existe, no crear duplicado
+                }
+
+                // Insertar el nuevo registro
+                string queryInsert = $@"
+                    INSERT INTO {tableName} (Codigo, FilePath, FechaInicio, FechaFinal, Ciudad, Radio, Posicion, Estado, TipoProgramacion)
+                    VALUES (@Codigo, @FilePath, @FechaInicio, @FechaFinal, @Ciudad, @Radio, @Posicion, @Estado, @TipoProgramacion)";
+
+                using (var cmd = new NpgsqlCommand(queryInsert, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Codigo", nuevoCodigo);
+                    cmd.Parameters.AddWithValue("@FilePath", datosBase.FilePath ?? "");
+                    cmd.Parameters.AddWithValue("@FechaInicio", datosBase.FechaInicio);
+                    cmd.Parameters.AddWithValue("@FechaFinal", datosBase.FechaFinal);
+                    cmd.Parameters.AddWithValue("@Ciudad", datosBase.Ciudad ?? "");
+                    cmd.Parameters.AddWithValue("@Radio", datosBase.Radio ?? "");
+                    cmd.Parameters.AddWithValue("@Posicion", datosBase.Posicion ?? "");
+                    cmd.Parameters.AddWithValue("@Estado", datosBase.Estado ?? "Activo");
+                    cmd.Parameters.AddWithValue("@TipoProgramacion", datosBase.TipoProgramacion ?? "");
+
+                    await cmd.ExecuteNonQueryAsync();
+                    System.Diagnostics.Debug.WriteLine($"[DataAccess] Creado nuevo código ACC: {nuevoCodigo}");
+                }
+            }
+
+            CacheService.InvalidarComerciales();
+        }
+
+        /// <summary>
+        /// Elimina un código ACC específico (un registro de la tabla Comerciales).
+        /// </summary>
+        public static async Task EliminarCodigoACCAsync(
+            string connectionString,
+            string tableName,
+            string codigoCompleto)
+        {
+            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
+            {
+                await conn.OpenAsync();
+
+                string query = $"DELETE FROM {tableName} WHERE Codigo = @Codigo";
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@Codigo", codigoCompleto);
+                    int deleted = await cmd.ExecuteNonQueryAsync();
+                    System.Diagnostics.Debug.WriteLine($"[DataAccess] Eliminado código ACC: {codigoCompleto} ({deleted} registros)");
+                }
+            }
+
+            CacheService.InvalidarComerciales();
+        }
+
+        /// <summary>
+        /// Obtiene todos los códigos ACC completos para un código numérico dado.
+        /// </summary>
+        public static async Task<List<string>> ObtenerCodigosACCCompletosAsync(
+            string connectionString,
+            string tableName,
+            string codigoNumerico)
+        {
+            var codigos = new List<string>();
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
+            {
+                await conn.OpenAsync();
+
+                string query = $@"
+                    SELECT Codigo FROM {tableName}
+                    WHERE Codigo LIKE 'ACC-' || @CodigoNumerico || '-%'
+                    ORDER BY Codigo";
+
+                using (var cmd = new NpgsqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@CodigoNumerico", codigoNumerico);
+
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            codigos.Add(reader["Codigo"].ToString());
+                        }
+                    }
+                }
+            }
+
+            return codigos;
         }
 
         /// <summary>

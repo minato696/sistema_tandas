@@ -63,17 +63,17 @@ namespace Generador_Pautas
 
             // Timer para debounce de busqueda
             timerBusqueda = new System.Windows.Forms.Timer();
-            timerBusqueda.Interval = 300;
+            timerBusqueda.Interval = 100;
             timerBusqueda.Tick += TimerBusqueda_Tick;
         }
 
         private void CreateControls()
         {
-            // Panel contenedor principal - altura reducida 30% (280 -> 196)
+            // Panel contenedor principal - altura compacta
             containerPanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 196,
+                Height = 160,
                 BackColor = Color.FromArgb(250, 250, 252)
             };
 
@@ -91,19 +91,19 @@ namespace Generador_Pautas
             comboBoxDrives = new ComboBox
             {
                 Location = new Point(22, 2),
-                Size = new Size(288, 20),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left,
+                Size = new Size(350, 20),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 Font = new Font("Segoe UI", 7.5F),
                 DrawMode = DrawMode.OwnerDrawFixed,
-                DropDownWidth = 288
+                DropDownWidth = 400
             };
 
             // DataGridView explorador - ahora va arriba, justo despues del combobox
             dgvExplorador = new DataGridView
             {
                 Location = new Point(2, 24),
-                Size = new Size(310, 130),  // Altura reducida
+                Size = new Size(370, 100),  // Ancho ajustado
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
@@ -123,7 +123,7 @@ namespace Generador_Pautas
             // Icono de busqueda - ahora debajo del DataGridView
             picBuscar = new PictureBox
             {
-                Location = new Point(4, 158),
+                Location = new Point(4, 128),
                 Size = new Size(15, 15),
                 SizeMode = PictureBoxSizeMode.Zoom,
                 Cursor = Cursors.Default
@@ -132,9 +132,9 @@ namespace Generador_Pautas
             // TextBox de busqueda - debajo del DataGridView
             txtBuscarAudio = new TextBox
             {
-                Location = new Point(22, 156),
-                Size = new Size(288, 19),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left,
+                Location = new Point(22, 126),
+                Size = new Size(328, 19),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 Font = new Font("Segoe UI", 7.5F),
                 ForeColor = Color.Black,
                 Text = "",
@@ -144,9 +144,9 @@ namespace Generador_Pautas
             // Boton cancelar busqueda
             btnCancelarBusqueda = new Button
             {
-                Location = new Point(288, 156),
+                Location = new Point(352, 126),
                 Size = new Size(22, 19),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left,
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
                 Text = "X",
                 FlatStyle = FlatStyle.Flat,
                 BackColor = Color.FromArgb(244, 67, 54),
@@ -160,9 +160,9 @@ namespace Generador_Pautas
             // Label estado busqueda - debajo del textbox
             lblEstadoBusqueda = new Label
             {
-                Location = new Point(22, 177),
-                Size = new Size(288, 12),
-                Anchor = AnchorStyles.Top | AnchorStyles.Left,
+                Location = new Point(22, 147),
+                Size = new Size(350, 12),
+                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right,
                 Font = new Font("Segoe UI", 6.5F),
                 ForeColor = Color.FromArgb(100, 100, 100)
             };
@@ -574,6 +574,23 @@ namespace Generador_Pautas
                 lblEstadoBusqueda.ForeColor = encontrados > 0
                     ? Color.FromArgb(76, 175, 80)
                     : Color.FromArgb(244, 67, 54);
+            }
+        }
+
+        /// <summary>
+        /// Muestra el progreso de carga de archivos
+        /// </summary>
+        public void MostrarProgresoCarga(int cargados, int total)
+        {
+            if (cargados < total)
+            {
+                lblEstadoBusqueda.Text = $"Cargando {cargados}/{total}...";
+                lblEstadoBusqueda.ForeColor = Color.FromArgb(33, 150, 243); // Azul
+            }
+            else
+            {
+                lblEstadoBusqueda.Text = $"{total} archivos";
+                lblEstadoBusqueda.ForeColor = Color.FromArgb(76, 175, 80); // Verde
             }
         }
 

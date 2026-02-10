@@ -25,11 +25,9 @@ namespace Generador_Pautas
         }
         private void PersonalizarDataGridView()
         {
-            PersonalizarDGV(dgv_archivos, new[] { "Column1", "Column2", "Column3", "Column4", "Column5" },
-                new[] { 25, 250, 50, 90, 90 });
-            PersonalizarDGV(dgv_base, new[]
-                {"Column20", "Column21", "Column22", "Column23", "Column24", "Column25", "Column26", "Column27"},
-                new[] { 30, 230, 40, 40, 45, 35, 20, 45 });
+            PersonalizarDGV(dgv_archivos, new[] { "Column2", "Column3", "Column4" },
+                new[] { 450, 50, 50 });
+            // dgv_base se configura dinámicamente en Form1.cs
             PersonalizarDGV(dgv_estaciones, new string[0], new int[0]);
             PersonalizarDGV(dgv_ciudades, new string[0], new int[0]);
             AgregarFila(dgv_estaciones, new[] { "EXITOSA", "KARIBEÑA", "LA KALLE" });
@@ -44,8 +42,11 @@ namespace Generador_Pautas
             }
             dgv.CellFormatting += (sender, e) =>
             {
-                if (e.ColumnIndex == 1) return;
-                e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                // Columna 0 (Nombre) alineada a la izquierda, el resto centrado
+                if (e.ColumnIndex == 0)
+                    e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+                else
+                    e.CellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             };
             dgv.CellPainting += (sender, e) =>
             {

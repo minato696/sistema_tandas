@@ -242,7 +242,6 @@ namespace Generador_Pautas
             cboProgramacion.Items.Add("Cada 10-40 (48 tandas)");
             cboProgramacion.Items.Add("Cada 15-45 (48 tandas)");
             cboProgramacion.Items.Add("Cada 20-50 (48 tandas)");
-            cboProgramacion.Items.Add("Cada 00-20-30-50 (96)");
             cboProgramacion.SelectedIndex = 0;
             cboProgramacion.SelectedIndexChanged += CboProgramacion_SelectedIndexChanged;
             Panel.Controls.Add(cboProgramacion);
@@ -475,8 +474,8 @@ namespace Generador_Pautas
                 rows = 8;
                 cols = 6;
                 altoCheck = (altoPanel - 4) / rows;
-                if (altoCheck < 24) altoCheck = 24;
-                fontSize = 11F;
+                if (altoCheck < 28) altoCheck = 28;
+                fontSize = 14F;
                 pnlTandas.AutoScroll = false;
             }
             else
@@ -484,8 +483,8 @@ namespace Generador_Pautas
                 // 96 tandas: 16 filas x 6 columnas con scroll
                 rows = 16;
                 cols = 6;
-                altoCheck = 26;
-                fontSize = 10F;
+                altoCheck = 30;
+                fontSize = 13F;
                 pnlTandas.AutoScroll = true;
             }
 
@@ -711,7 +710,6 @@ namespace Generador_Pautas
                 case 1: tipo = TipoTanda.Tandas_10_40; break;
                 case 2: tipo = TipoTanda.Tandas_15_45; break;
                 case 3: tipo = TipoTanda.Tandas_20_50; break;
-                case 4: tipo = TipoTanda.Tandas_00_20_30_50; break;
                 default: tipo = TipoTanda.Tandas_00_30; break;
             }
             _tipoTandaActual = tipo;
@@ -883,7 +881,6 @@ namespace Generador_Pautas
                 if (datos.TipoProgramacion.Contains("10-40")) { tipo = TipoTanda.Tandas_10_40; comboIndex = 1; }
                 else if (datos.TipoProgramacion.Contains("15-45")) { tipo = TipoTanda.Tandas_15_45; comboIndex = 2; }
                 else if (datos.TipoProgramacion.Contains("20-50")) { tipo = TipoTanda.Tandas_20_50; comboIndex = 3; }
-                else if (datos.TipoProgramacion.Contains("00-20-30-50")) { tipo = TipoTanda.Tandas_00_20_30_50; comboIndex = 4; }
             }
             cboProgramacion.SelectedIndexChanged -= CboProgramacion_SelectedIndexChanged;
             cboProgramacion.SelectedIndex = comboIndex;
@@ -1464,7 +1461,6 @@ namespace Generador_Pautas
                 case TipoTanda.Tandas_10_40: return "Cada 10-40";
                 case TipoTanda.Tandas_15_45: return "Cada 15-45";
                 case TipoTanda.Tandas_20_50: return "Cada 20-50";
-                case TipoTanda.Tandas_00_20_30_50: return "Cada 00-20-30-50";
                 default: return "Cada 00-30";
             }
         }

@@ -584,12 +584,13 @@ namespace Generador_Pautas
         {
             if (cargados < total)
             {
-                lblEstadoBusqueda.Text = $"Cargando {cargados}/{total}...";
+                int porcentaje = (cargados * 100) / total;
+                lblEstadoBusqueda.Text = $"Cargando metadatos {cargados}/{total} ({porcentaje}%)...";
                 lblEstadoBusqueda.ForeColor = Color.FromArgb(33, 150, 243); // Azul
             }
             else
             {
-                lblEstadoBusqueda.Text = $"{total} archivos";
+                lblEstadoBusqueda.Text = $"{total} archivos cargados";
                 lblEstadoBusqueda.ForeColor = Color.FromArgb(76, 175, 80); // Verde
             }
         }

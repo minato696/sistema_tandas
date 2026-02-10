@@ -2088,8 +2088,8 @@ namespace Generador_Pautas
             CargarNombresRapido(audioFilePaths);
             fileExplorerPanel.MostrarProgresoCarga(totalArchivos, totalArchivos);
 
-            // PASO 2: Cargar metadatos en segundo plano (solo si hay menos de 500 archivos)
-            if (totalArchivos <= 500 && totalArchivos > 0)
+            // PASO 2: Cargar metadatos en segundo plano (siempre, sin límite)
+            if (totalArchivos > 0)
             {
                 await CargarMetadatosEnSegundoPlano(token);
             }
@@ -2123,7 +2123,10 @@ namespace Generador_Pautas
         private async Task CargarMetadatosEnSegundoPlano(CancellationToken token)
         {
             int totalArchivos = songPaths.Count;
-            int batchSize = 20; // Procesar en lotes pequeños para no bloquear UI
+
+            // Ajustar tamaño de lote según cantidad de archivos
+            int batchSize = totalArchivos > 1000 ? 50 : (totalArchivos > 500 ? 30 : 20);
+            int procesados = 0;
 
             for (int i = 0; i < totalArchivos; i += batchSize)
             {
@@ -2144,23 +2147,30 @@ namespace Generador_Pautas
                         string duracion = "";
                         string bitrate = "";
 
-                        int stream = Bass.BASS_StreamCreateFile(filePath, 0, 0, BASSFlag.BASS_STREAM_DECODE);
-                        if (stream != 0)
+                        try
                         {
-                            long length = Bass.BASS_ChannelGetLength(stream);
-                            double seconds = Bass.BASS_ChannelBytes2Seconds(stream, length);
-                            if (seconds > 0)
+                            int stream = Bass.BASS_StreamCreateFile(filePath, 0, 0, BASSFlag.BASS_STREAM_DECODE);
+                            if (stream != 0)
                             {
-                                TimeSpan time = TimeSpan.FromSeconds(seconds);
-                                duracion = time.ToString(SongTimeFormat);
+                                long length = Bass.BASS_ChannelGetLength(stream);
+                                double seconds = Bass.BASS_ChannelBytes2Seconds(stream, length);
+                                if (seconds > 0)
+                                {
+                                    TimeSpan time = TimeSpan.FromSeconds(seconds);
+                                    duracion = time.ToString(SongTimeFormat);
+                                }
+
+                                float br = 0;
+                                Bass.BASS_ChannelGetAttribute(stream, BASSAttribute.BASS_ATTRIB_BITRATE, ref br);
+                                if (br > 0)
+                                    bitrate = $"{(int)Math.Round(br)}";
+
+                                Bass.BASS_StreamFree(stream);
                             }
-
-                            float br = 0;
-                            Bass.BASS_ChannelGetAttribute(stream, BASSAttribute.BASS_ATTRIB_BITRATE, ref br);
-                            if (br > 0)
-                                bitrate = $"{(int)Math.Round(br)}";
-
-                            Bass.BASS_StreamFree(stream);
+                        }
+                        catch
+                        {
+                            // Ignorar errores de archivos individuales
                         }
 
                         resultado.Add((j, duracion, bitrate));
@@ -2172,17 +2182,31 @@ namespace Generador_Pautas
                 if (token.IsCancellationRequested) return;
 
                 // Actualizar UI con los metadatos
-                foreach (var (idx, duracion, bitrate) in metadatos)
+                dgv_archivos.SuspendLayout();
+                try
                 {
-                    if (idx < dgv_archivos.Rows.Count)
+                    foreach (var (idx, duracion, bitrate) in metadatos)
                     {
-                        dgv_archivos.Rows[idx].Cells[1].Value = duracion;
-                        dgv_archivos.Rows[idx].Cells[2].Value = bitrate;
+                        if (idx < dgv_archivos.Rows.Count)
+                        {
+                            dgv_archivos.Rows[idx].Cells[1].Value = duracion;
+                            dgv_archivos.Rows[idx].Cells[2].Value = bitrate;
+                        }
                     }
                 }
+                finally
+                {
+                    dgv_archivos.ResumeLayout();
+                }
 
-                // Pequeña pausa para no saturar la UI
-                await Task.Delay(5, token);
+                procesados = fin;
+
+                // Mostrar progreso de carga de metadatos
+                fileExplorerPanel.MostrarProgresoCarga(procesados, totalArchivos);
+
+                // Pausa más larga para archivos grandes (evita saturar UI)
+                int delay = totalArchivos > 1000 ? 10 : 5;
+                await Task.Delay(delay, token);
             }
         }
 
